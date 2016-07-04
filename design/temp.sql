@@ -1,0 +1,1 @@
+select  m.*,m1.osName from machinesinfo m right join machines m1 on m1.id = m.id where m1.id = 1 order by time desc  limit 1

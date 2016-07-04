@@ -1,0 +1,199 @@
+接口:
+	以下所有json格式值,固定的值会写出绝对的数量,变值会使用:"XXX"这样的代替,数字变值使用小写xx代替
+	数组内,有多个用...表示.
+	所有请求参数用http://sxx?para=的形式上传参数
+0.访问地址
+	各系统不同,以下均采用相对于此地址相对地址:
+	/monitor/
+1.用户登录
+	本系统可嵌入其他系统当中,也可独立产生,所以登录请求需要发送一个登录请求,调用其他方法前必须调用登录请求,请求地址:
+		./login
+	请求信息:
+	{username:"XXX",passwd:"XXX"}
+	返回:
+	成功
+		{res:true}
+		res:指示此操作是否成功,下同
+	失败
+		{res:false,reason:"XXX"}
+		reason:失败的原因
+	
+注:如未登录调用其他方法,会得到如下信息:	
+	{res:false,reason:"not login!please log in first."}
+	
+2.给出所有机器数量以及机器列表:
+	请求地址:./MachinesInfo
+	请求信息:
+	{gettype:all}
+		gettype:all 指明请求所有内容
+		
+	成功返回:
+		{res:true,count:xx,online:xx,offline:xx,data:[
+			{id:xx,name:"XXX",online:true/false,
+				totalMemory:xx,freeMemory:xx,maxMemory:xx,osName:"XXX",
+				totalPhysicalMemory:xx,freePhysicalMemory:xx,usedPhysicalMemory:xx,totalThread:xx,
+				cpuRatio:xx,totalDisk:xx,freeDisk:xx}
+			...
+			]}
+		count:返回监控机器总数
+		online:在线机器数
+		offline:离线机器数
+		data:指明每一个机器的相关数据
+			id:指明此台机器在本系统当中的ID
+			name:指明此机器在本系统当中给出的名字
+			online:指明此机器是否在线,如此机器未上线,后续数据无效,true:在线,false 离线
+			
+			totalMemory:可使用内存
+			freeMemory:剩余内存
+			maxMemory:最大可使用内存
+			totalPhysicalMemory:总的物理内存
+			freePhysicalMemory:剩余的物理内存
+			usedPhysicalMemory:已使用的物理内存
+			totalThread:线程总数
+			cpuRatio:cpu使用率,整数,指明百分比
+			totalDisk:硬盘总容量
+			freeDisk:可用硬盘容量
+			osName: 操作系统
+	
+	失败返回:
+		{res:false,reason:"XXX",errorid:xx}
+		
+		errorid:指明失败代码,用以特殊处理,下同
+		
+3.给出机器数量以及是否在线,此信息是2的简化版本,仅指明系统的数量以及是否在线
+	请求地址:./MachinesInfo
+	请求信息:
+		{gettype:probably}
+		gettype:probably 指明请求概要内容
+	
+	成功返回:
+		{res:true,count:xx,online:xx,offline:xx,data:[
+			{id:xx,name:"XXX",online:true/false}
+			...
+			]}
+		count:返回监控机器总数
+		online:在线机器数
+		offline:离线机器数
+		data:指明每一个机器的相关数据
+			id:指明此台机器在本系统当中的ID
+			name:指明此机器在本系统当中给出的名字
+			online:指明此机器是否在线,true:在线,false 离线
+	
+	失败返回:
+		{res:false,reason:"XXX",errorid:xx}
+		
+4.给出单个机器详细数据
+	请求地址:./MachinesInfo
+	请求信息:
+		{gettype:one,id:xx}
+		gettype:指明请求的是单个信息
+		id:指明需要获得信息的机器的ID
+	
+	成功返回:
+		{res:true,id:xx,name:"XXX",online:true/false,
+			totalMemory:xx,freeMemory:xx,maxMemory:xx,osName:"XXX",
+			totalPhysicalMemory:xx,freePhysicalMemory:xx,usedPhysicalMemory:xx,totalThread:xx,
+			cpuRatio:xx,totalDisk:xx,freeDisk:xx}
+
+		id:指明此台机器在本系统当中的ID
+		name:指明此机器在本系统当中给出的名字
+		online:指明此机器是否在线,如此机器未上线,后续数据无效,true:在线,false 离线	
+		totalMemory:可使用内存
+		freeMemory:剩余内存
+		maxMemory:最大可使用内存
+		totalPhysicalMemory:总的物理内存
+		freePhysicalMemory:剩余的物理内存
+		usedPhysicalMemory:已使用的物理内存
+		totalThread:线程总数
+		cpuRatio:cpu使用率,整数,指明百分比
+		totalDisk:硬盘总数
+		freeDisk:可用硬盘数
+		osName: 操作系统
+	
+	失败返回:
+		{res:false,reason:"XXX",errorid:xx}
+
+5.给出总的服务数量以及所有服务列表:
+	请求地址:./ServerInfo
+	请求信息:
+	{gettype:all,begintime:"XXX",endtime:"XXX",interval:xx}
+		gettype:all 请求所有数据
+		begintiem:请求数据的启始时间
+		endtime:请求数据的结束时间
+		interval:请求数据的时间间隔,取值:
+			1:代表1分钟
+			2:代表15分钟
+			3:代表30分钟
+			4:代表60分钟
+			5:代表120分钟
+			6:代表240分钟
+
+	成功返回:
+		{res:true,count:xx,online:xx,offline:xx,data:[
+			{id:xx,name:"XXX",type:xx,details:{"XXX"}}
+			...
+			]}
+	count:服务总数
+	online:在线的服务数
+	offline:离线的服务数
+	data:所有服务相对应的数据
+		id:服务在监控系统当中注册的id号
+		name:服务在监控系统当中注册的名称
+		type:指明此服务的类型
+		details:一个单独的json,此对象根据不同的type,有不同的数据,具体的见下
+		
+	失败返回:
+		{res:false,reason:"XXX",errorid:xx}
+	
+6.给出所有服务器大概信息
+	请求地址:./ServerInfo
+	请求信息:
+		{gettype:probably}
+		gettype:probably 请求服务概要数据
+		
+	成功返回:
+		{res:true,count:xx,online:xx,offline:xx,data:[
+			{id:xx,name:"XXX",type:xx}
+			...
+			]}
+	count:服务总数
+	online:在线的服务数
+	offline:离线的服务数
+	data:所有服务相对应的数据
+		id:服务在监控系统当中注册的id号
+		name:服务在监控系统当中注册的名称
+		type:指明此服务的类型
+		
+	失败返回:
+		{res:false,reason:"XXX",errorid:xx}
+	
+7.给出单个服务器详细信息
+	请求地址:./ServerInfo
+	请求信息:
+		{gettype:one,id:xx,begintime:"XXX",endtime:"XXX",interval:xx}
+		gettype:one 指明请求为单个服务
+		id:指明请求获得数据的ID
+
+	
+	成功返回:
+		{res:true,id:xx,online:true/false,name:"XXX",type:xx,details:{"XXX"}}
+	count:服务总数
+	online:指明此服务是否在线
+	type:指明此服务的类型
+	details:一个单独的json,此对象根据不同的type,有不同的数据,具体的见下
+		
+	失败返回:
+		{res:false,reason:"XXX",errorid:xx}
+	
+8.不同type给出的不同数据格式
+	type值:1 WEB访问.details内容:
+		{reqamount:[{interval:xx,value:xx}...],
+			useagent:[{name:"XXX",value:xx}...]
+		}
+		reqamount:指明访问量数据
+			interval:指明第几个间隔的数据
+			value:此间隔时间所获得的数据
+		useagent:用户所使用的客户端
+			name:客户端名称,如IE...
+			value:此间隔的客户端数量
+		此type在请求时需要给出相应的启始时间和结束时间,以及统计数据间隔的时间.
