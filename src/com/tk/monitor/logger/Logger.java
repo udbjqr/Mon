@@ -111,7 +111,7 @@ public class Logger{
  *
  */
  class LogFormatter extends Formatter{
-  private static final String format = "%1$tm-%1$td %1$tT.%1$tL %2$s%n%4$s: %5$s%6$s%n%n";
+  private static final String format = "%1$tm-%1$td %1$tT.%1$tL %7$s %2$s%n%4$s: %5$s%6$s%n%n";
   
   private final Date dat = new Date();
 
@@ -138,13 +138,13 @@ public class Logger{
         pw.close();
         throwable = sw.toString();
     }
-    
     return String.format(format,
                          dat,
                          source,
                          record.getLoggerName(),
                          record.getLevel().getLocalizedName(),
                          message,
-                         throwable);
+                         throwable,
+                         Thread.currentThread().getId());
 	}
 }

@@ -1,0 +1,7 @@
+采集主入口:Server.
+在使用前需要执行的方法:
+	调用数据库初始化,如:
+		DataBaseHandle.getDBHandle(DBType.Mysql).init("127.0.0.1", "3306", "test", "root", "123456");
+	调用server.init()
+	附加到线程,开启线程.
+	

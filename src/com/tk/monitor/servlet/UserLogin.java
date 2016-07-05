@@ -29,27 +29,32 @@ public class UserLogin extends HttpServlet{
 		//判断此session是否已经存在用户,存在则不允许再次登录.
 		if(user != null){
 			log.warning("用户已经存在,不再进行登录操作:" + user);
-			resp.getWriter().write(String.format(Constant.respLoginTrue,"用户已经存在,请先退出."));
+			resp.getWriter().println(String.format(Constant.respLoginTrue,"用户已经存在,请先退出."));
 			return;
 		}
 		
-		String parastr = req.getParameter(Constant.reqPara);
-		log.fine("收到请求:" + parastr);
+		String username = req.getParameter(Constant.loginUserName);
+		String passwd = req.getParameter(Constant.loginPasswd);
+
+		if(username == null || passwd == null){
+			log.fine("参数不全,退出:");
+			resp.getWriter().println(String.format(Constant.respLoginTrue,"传入参数不足够,需要username和passwd参数."));
+			return;
+		}
 		
-		JSONObject para = new JSONObject(parastr);
 		
 		//获得用户,并将用户于session绑定在一起.
-		user = User.newUser(para.getString(Constant.loginUserName), para.getString(Constant.loginPasswd),session);
+		user = User.newUser(username, passwd,session);
 		
 		if(user != null){
 			session.setAttribute(Constant.sessionUserAttrib, user);
 			
 			//返回登录成功.
-			resp.getWriter().write(Constant.respLoginTrue);
+			resp.getWriter().println(Constant.respLoginTrue);
 		}else{
 			//失败,返回错误信息.
 			log.info("用户为空,不记录");
-			resp.getWriter().write(Constant.respLoginFalseWithUserOrPass);
+			resp.getWriter().print(Constant.respLoginFalseWithUserOrPass);
 		}
 		
 		super.doGet(req, resp);

@@ -122,7 +122,7 @@
 5.给出总的服务数量以及所有服务列表:
 	请求地址:./ServerInfo
 	请求信息:
-	?gettype=all&begintime="XXX"&endtime="XXX"&interval=xx
+	{gettype:all,begintime:"XXX",endtime:"XXX",interval:xx}
 		gettype:all 请求所有数据
 		begintiem:请求数据的启始时间
 		endtime:请求数据的结束时间
@@ -176,7 +176,7 @@
 7.给出单个服务器详细信息
 	请求地址:./ServerInfo
 	请求信息:
-		?gettype=one&id=xx&begintime="XXX"&endtime="XXX"&interval=xx
+		{gettype:one,id:xx,begintime:"XXX",endtime:"XXX",interval:xx}
 		gettype:one 指明请求为单个服务
 		id:指明请求获得数据的ID
 

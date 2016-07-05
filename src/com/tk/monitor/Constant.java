@@ -10,10 +10,6 @@ public final class Constant{
 	/**
 	 * 请求时所指定的参数名
 	 */
-	public final static String reqPara = "para";
-	/**
-	 * 请求时所指定的参数名
-	 */
 	public final static String loginUserName = "username";
 	/**
 	 * 请求时所指定的参数名
@@ -38,7 +34,7 @@ public final class Constant{
 	/**
 	 * 返回错误:用户名或密码错误.
 	 */
-	public final static String respLoginFalseWithUserOrPass = String.format(Constant.respLoginTrue, "用户名或密码错误.",-1);
+	public final static String respLoginFalseWithUserOrPass = String.format(Constant.respLoginTrue, "用户名或密码错误.", -1);
 
 	/**
 	 * 返回错误:用户还未登录
@@ -49,9 +45,9 @@ public final class Constant{
 	 * 请求:指明请求的方式:所有/单个/概要
 	 */
 	public final static String reqParaGetType = "gettype";
-	
+
 	/**
-	 *请求方式:所有
+	 * 请求方式:所有
 	 */
 	public final static String GetTypeWithAll = "all";
 	/**
@@ -62,9 +58,20 @@ public final class Constant{
 	 * 请求方式:概要
 	 */
 	public final static String GetTypeWithProbably = "probably";
-	
+
 	/**
 	 * 请求机器或服务的ID
 	 */
 	public final static String reqParaId = "id";
+
+	/**
+	 * 返回:单个机器硬件详细信息字串
+	 */
+	public final static String oneMachinesInfo = "{res:true,id:%d,name:\"%s\",online:\"%s\","
+			+ "totalMemory:%d,freeMemory:%d,maxMemory:%d,osName:\"%s\","
+			+ "totalPhysicalMemory:%d,freePhysicalMemory:%d,usedPhysicalMemory:%d,totalThread:%d,"
+			+ "cpuRatio:%d,totalDisk:%d,usedDisk:%d,freeDisk:%d}";
+	
+	
+	
 }

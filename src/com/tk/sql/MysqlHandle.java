@@ -38,6 +38,8 @@ public final class MysqlHandle extends DataBaseHandle{
 
 	@Override
 	public void init(String server, String port, String db, String user, String passwd) {
+		log.fine("初始化数据库连接池.");
+		
 		connStr = String.format("jdbc:mysql://%s:%s/%s", server, port, db);
 //		this.user = user;
 //		this.passwd = passwd;
