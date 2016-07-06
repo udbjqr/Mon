@@ -18,7 +18,7 @@ public class LogFormatter extends Formatter{
   private final Date dat = new Date();
 
 	@Override
-	public String format(LogRecord record) {
+	public synchronized String format(LogRecord record) {
     dat.setTime(record.getMillis());
     String source;
     
@@ -30,6 +30,7 @@ public class LogFormatter extends Formatter{
     } else {
         source = record.getLoggerName();
     }
+    	
     String message = formatMessage(record);
     String throwable = "";
     if (record.getThrown() != null) {

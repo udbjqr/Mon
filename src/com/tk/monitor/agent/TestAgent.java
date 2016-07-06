@@ -2,16 +2,21 @@ package com.tk.monitor.agent;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Logger;
 
+import com.tk.logger.Logging;
 import com.tk.sql.DBType;
 import com.tk.sql.DataBaseHandle;
 
 public class TestAgent implements Runnable{
 	DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.Mysql);
-	private static final Logger log = com.tk.logger.Logger.getLogger();
+	private static final Logger log = Logging.getLogger();
 
 	public static void main(String[] args) {
+		log.info("abcdefgqropjfijasopfdajspfoiajpfa");
+		
 		for (int i = 0; i < 20; i++) {
 			Thread th = new Thread(new TestAgent());
 			th.start();

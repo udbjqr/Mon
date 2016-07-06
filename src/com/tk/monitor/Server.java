@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import org.json.JSONObject;
 
+import com.tk.logger.Logging;
 import com.tk.monitor.collection.Collection;
 import com.tk.monitor.collection.CollectionRecord;
 import com.tk.monitor.collection.CollectionType;
@@ -23,7 +24,7 @@ import com.tk.sql.DataBaseHandle;
  *
  */
 public class Server implements CollectionRecord, Runnable{
-	private static final Logger log = com.tk.logger.Logger.getLogger();
+	private static final Logger log = Logging.getLogger();
 	DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.Mysql);
 
 	private static final Server ins = new Server();

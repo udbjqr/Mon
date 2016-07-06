@@ -6,6 +6,9 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.tk.logger.Logging;
+
 import java.sql.Connection;
 
 /**
@@ -19,7 +22,7 @@ import java.sql.Connection;
  *
  */
 public class DBConnectPool{
-	private static final Logger log = com.tk.logger.Logger.getLogger();
+	private static final Logger log = Logging.getLogger();
 	private static final DBConnectPool ins = new DBConnectPool();
 	private final Map<Connection, com.tk.sql.Connection> rc = new Hashtable<>();
 

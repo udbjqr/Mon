@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 import org.json.JSONObject;
 
+import com.tk.logger.Logging;
 import com.tk.monitor.collection.Collection;
 import com.tk.monitor.collection.CollectionRecord;
 import com.tk.monitor.collection.CollectionType;
@@ -26,11 +27,11 @@ import com.tk.monitor.collection.Machines;
  *
  */
 public class Agent implements CollectionRecord, Runnable{
-	private static final Logger log = com.tk.logger.Logger.getLogger();
+	private static final Logger log = Logging.getLogger();
 	private String sessionStr = null;
 	private final String serverAddr;
 	private URL url = null;
-
+  
 	private Thread th;
 
 	private boolean shutDown = true;

@@ -2,6 +2,9 @@ package com.tk.sql;
 
 import java.sql.ResultSet;
 import java.util.logging.Logger;
+
+import com.tk.logger.Logging;
+
 import java.sql.Connection;
 
 /**
@@ -10,7 +13,7 @@ import java.sql.Connection;
  *
  */
 public abstract class DataBaseHandle{
-	protected static final Logger log = com.tk.logger.Logger.getLogger();
+	protected static final Logger log = Logging.getLogger();
 	
 	public static DataBaseHandle getDBHandle(DBType type){
 		switch (type) {

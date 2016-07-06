@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import com.tk.logger.Logging;
 import com.tk.monitor.Constant;
 import com.tk.monitor.users.User;
 import com.tk.sql.DBType;
@@ -19,7 +21,7 @@ import com.tk.monitor.FieldName;
 
 public class MachinesInfo extends HttpServlet{
 	private static final long serialVersionUID = -8502155827609533702L;
-	private static final Logger log = com.tk.logger.Logger.getLogger();
+	private static final Logger log = Logging.getLogger();
 	private static final DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.Mysql);
 	private int id = -1;
 

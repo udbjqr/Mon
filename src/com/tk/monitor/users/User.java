@@ -6,6 +6,8 @@ import java.util.logging.Logger;
 
 import javax.servlet.http.HttpSession;
 
+import com.tk.logger.Logging;
+
 /**
  * 指明一个监控的用户对象.
  * 
@@ -16,7 +18,7 @@ import javax.servlet.http.HttpSession;
  *
  */
 public class User{
-	private static Logger log = com.tk.logger.Logger.getLogger();
+	private static Logger log = Logging.getLogger();
 
 	protected static final Set<User> users = new HashSet<User>();
 	private final String tostr;

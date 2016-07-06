@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.sun.management.OperatingSystemMXBean;
+import com.tk.logger.Logging;
 
 import sun.management.ManagementFactoryHelper;
 
@@ -20,7 +21,7 @@ import sun.management.ManagementFactoryHelper;
  *
  */
 public class Machines implements Collection{
-	private static final Logger log = com.tk.logger.Logger.getLogger();
+	private static final Logger log = Logging.getLogger();
 
 	private int collInterval;
 	private int machineId;

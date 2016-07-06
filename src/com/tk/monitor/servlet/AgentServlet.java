@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.tk.logger.Logging;
 import com.tk.monitor.Constant;
 import com.tk.monitor.Server;
 import com.tk.monitor.collection.CollectionType;
@@ -22,7 +23,7 @@ import com.tk.monitor.collection.CollectionType;
  */
 public class AgentServlet extends HttpServlet{
 	private static final long serialVersionUID = 2970774480360621613L;
-	private static final Logger log = com.tk.logger.Logger.getLogger();
+	private static final Logger log = Logging.getLogger();
 	private static final Server server = Server.getIns();
 
 	@Override

@@ -5,11 +5,12 @@ import java.util.logging.Logger;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import com.tk.logger.Logging;
 import com.tk.sql.DBType;
 import com.tk.sql.DataBaseHandle;
 
 public class TomcatListener implements ServletContextListener{
-	private static final Logger log = com.tk.logger.Logger.getLogger();
+	private static final Logger log = Logging.getLogger();
 
 	@Override
 	public void contextDestroyed(ServletContextEvent arg0) {
