@@ -6,7 +6,7 @@ import com.tk.sql.DataBaseHandle;
 public class Test{
 	public static void main(String[] args) {
 		DataBaseHandle.getDBHandle(DBType.Mysql).init("127.0.0.1", "3306", "test", "root", "123456");
-		Server ser = new Server();
+		Server ser = Server.getIns();
 		
 		Thread th = new Thread(ser);
 		

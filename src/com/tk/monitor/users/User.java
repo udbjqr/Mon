@@ -16,7 +16,7 @@ import javax.servlet.http.HttpSession;
  *
  */
 public class User{
-	private static Logger log = com.tk.monitor.logger.Logger.getLogger();
+	private static Logger log = com.tk.logger.Logger.getLogger();
 
 	protected static final Set<User> users = new HashSet<User>();
 	private final String tostr;

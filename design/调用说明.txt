@@ -5,3 +5,10 @@
 	调用server.init()
 	附加到线程,开启线程.
 	
+web程序设置:
+	因为用到数据库连接,因此需要初始化数据库连接池对象.调用方式:如:
+		DataBaseHandle.getDBHandle(DBType.Mysql).init("127.0.0.1", "3306", "test", "root", "123456");
+	将web.xml内内容增加至相应的web.xml内,即可.
+	
+	
+当使用代理时,需要将本部分程序布置至tomcat里面,并在web.xml里面增加监听器.

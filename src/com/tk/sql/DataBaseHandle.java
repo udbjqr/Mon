@@ -10,7 +10,7 @@ import java.sql.Connection;
  *
  */
 public abstract class DataBaseHandle{
-	protected static final Logger log = com.tk.monitor.logger.Logger.getLogger();
+	protected static final Logger log = com.tk.logger.Logger.getLogger();
 	
 	public static DataBaseHandle getDBHandle(DBType type){
 		switch (type) {
@@ -43,6 +43,7 @@ public abstract class DataBaseHandle{
 
 	/**
 	 * 执行一个只返回单个值的select语句,此操作不需要关闭动作.
+	 * <p>如果未取得值,返回 Integer.MIN_VALUE
 	 * @param str 需要执行的sql语句
 	 * @return 执行结果的一个int值.
 	 */

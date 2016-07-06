@@ -3,7 +3,10 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee                      
  http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
-
+    <listener>  
+        <listener-class>com.tk.monitor.TomcatListener</listener-class>  
+    </listener>  
+    
 	<servlet>
 		<servlet-name>MonLogin</servlet-name>
 		<servlet-class>com.tk.monitor.servlet.UserLogin</servlet-class>
@@ -17,7 +20,15 @@
 		<servlet-name>GetServerInfo</servlet-name>
 		<servlet-class>com.tk.monitor.servlet.ServerInfo</servlet-class>
 	</servlet>
+	<servlet>
+		<servlet-name>AgentExchang</servlet-name>
+		<servlet-class>com.tk.monitor.servlet.AgentServlet</servlet-class>
+	</servlet>
 
+	<servlet-mapping>
+		<servlet-name>AgentExchang</servlet-name>
+		<url-pattern>/monitor/Agent</url-pattern>
+	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>GetMachinesInfo</servlet-name>
 		<url-pattern>/monitor/MachinesInfo</url-pattern>

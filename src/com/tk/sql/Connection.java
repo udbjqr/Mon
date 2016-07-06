@@ -102,8 +102,10 @@ public class Connection implements java.sql.Connection{
 	}
 
 	@Override
-	public synchronized void close() throws SQLException {
-		busy = false;
+	public void close() throws SQLException {
+		synchronized (this) {
+			busy = false;
+		}
 		synchronized (pool) {
 			pool.notify();
 		}

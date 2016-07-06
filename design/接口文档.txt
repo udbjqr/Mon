@@ -211,3 +211,19 @@
 			totalmemory:xx,freememory:xx,maxmemory:xx,osname:"XXX",
 			totalphysicalmemory:xx,freephysicalmemory:xx,usedphysicalmemory:xx,totalthread:xx,
 			cpuratio:xx,totaldisk:xx,freedisk:xx}
+2.Agent与server接口传输方式
+	地址:/monitor/Agent
+		a.传输方式为:type=采集类型&data=数据的方式传输;
+		b.Agent请求初始化数据.请求为:init=xx此值任意,目前无意义.
+			返回:"{res:true,agent:xx,data:[{type:xx,ispaush:xx,collinterval:xx,collid:xx}...]}"
+			res:true 指明传输成功
+			agent:指明此agent的代理号
+			data:采集的数据
+				type:采集对象的类型
+				ispaush:是否暂停采集
+				collinterval:采集的间隔时间
+				collid:采集对象的id
+				
+	注:
+		server端是根据agent端的iP地址来返回相应数据.如agent修改了IP地址,需要在server端进行相应修改.
+		

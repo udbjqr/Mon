@@ -20,7 +20,7 @@ import sun.management.ManagementFactoryHelper;
  *
  */
 public class Machines implements Collection{
-	private static final Logger log = com.tk.monitor.logger.Logger.getLogger();
+	private static final Logger log = com.tk.logger.Logger.getLogger();
 
 	private int collInterval;
 	private int machineId;
@@ -47,34 +47,34 @@ public class Machines implements Collection{
 	private final int kb = 1024 * 1024;
 
 	private boolean shutDown = true;
+	private long lastRunTime = 0;
 	private boolean pause = false;
 	private int agent = 0;
-	
+
 	@Override
 	public void start() {
-		shutDown = false;
-		th = new Thread(this);
-		th.start();
+		if (shutDown) {
+			shutDown = false;
+			th = new Thread(this);
+			th.start();
+		}
 	}
 
 	@Override
-	public void stop() {
-		log.info("已经接受关闭,等待关闭.");
+	public synchronized void stop() {
+		log.info("已经接受关闭,等待关闭.id:" + machineId);
 		shutDown = true;
+		notify();
 	}
 
 	@Override
-	public void run() {
-		log.info("采集开始启动,采集号:" + machineId);
+	public synchronized void run() {
+		log.info("采集开始启动,id:" + machineId);
 		while (!shutDown) {
-			// 停止相应间隔时间
-			try {
-				Thread.sleep(collInterval);
-			} catch (InterruptedException e) {
-				log.log(Level.SEVERE, "线程暂停失败:", e);
-			}
-			
-			init();
+			log.finest("开始采集数据.");
+			lastRunTime = System.currentTimeMillis();
+
+			clear();
 			dat.setTime(System.currentTimeMillis());
 			totalMemory = Runtime.getRuntime().totalMemory() / kb;
 			freeMemory = Runtime.getRuntime().freeMemory() / kb;
@@ -104,17 +104,26 @@ public class Machines implements Collection{
 				usedDisk += file.getUsableSpace() / kb;
 				totalDisk += file.getTotalSpace() / kb;
 			}
-			
+
 			String str = String.format(jsonStr, dat, totalMemory, freeMemory, maxMemory, osName, totalPhysicalMemory,
-					freePhysicalMemory, usedPhysicalMemory, totalThread, cpuRatio, totalDisk, usedDisk,freeDisk);
-			
+					freePhysicalMemory, usedPhysicalMemory, totalThread, cpuRatio, totalDisk, usedDisk, freeDisk);
+
 			log.finer("采集到数据:" + str);
-			
-			server.save(this,str);
+
+			server.save(type, str);
+
+			// 停止相应间隔时间
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				log.log(Level.SEVERE, "线程暂停失败:", e);
+			}
 		}
+		
+		log.finer("采集线程结束,id:" + machineId);
 	}
 
-	private void init() {
+	private void clear() {
 		totalMemory = 0;
 		freeMemory = 0;
 		maxMemory = 0;
@@ -255,6 +264,7 @@ public class Machines implements Collection{
 		return null;
 	}
 
+	@Override
 	public int getId() {
 		return machineId;
 	}
@@ -273,7 +283,7 @@ public class Machines implements Collection{
 	 * @param server
 	 *          将采集数据送至此对象
 	 */
-	public Machines( CollectionRecord server,int agent,boolean pause,int collInterval, int id) {
+	public Machines(CollectionRecord server, int agent, boolean pause, int collInterval, int id) {
 		this.server = server;
 		this.agent = agent;
 		this.pause = pause;
@@ -284,7 +294,7 @@ public class Machines implements Collection{
 				+ "totalphysicalmemory:%6$d,freephysicalmemory:%7$d,usedphysicalmemory:%8$d,totalthread:%9$d,"
 				+ "cpuratio:%10$f,totaldisk:%11$d,useddisk:%12$d,freedisk:%13$d}";
 	}
-	
+
 	private String substring(String src, int start_idx, int end_idx) {
 		byte[] b = src.getBytes();
 		String tgt = "";
@@ -294,7 +304,6 @@ public class Machines implements Collection{
 		return tgt;
 	}
 
-	
 	@Override
 	public boolean isShutDown() {
 		return shutDown;
@@ -304,7 +313,7 @@ public class Machines implements Collection{
 	public boolean isPause() {
 		return pause;
 	}
-	
+
 	@Override
 	public void setPause(boolean pause) {
 		this.pause = pause;
@@ -315,4 +324,20 @@ public class Machines implements Collection{
 		return agent;
 	}
 
+	@Override
+	public int getInterval() {
+		return collInterval;
+	}
+
+	@Override
+	public long getLastRunTime() {
+		return lastRunTime;
+	}
+
+	@Override
+	public synchronized void collection() {
+		if (!shutDown) {
+			notify();
+		}
+	}
 }

@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.json.JSONObject;
 import com.tk.monitor.Constant;
 import com.tk.monitor.users.User;
 import com.tk.sql.DBType;
@@ -20,23 +19,18 @@ import com.tk.monitor.FieldName;
 
 public class MachinesInfo extends HttpServlet{
 	private static final long serialVersionUID = -8502155827609533702L;
-	private static final Logger log = com.tk.monitor.logger.Logger.getLogger();
+	private static final Logger log = com.tk.logger.Logger.getLogger();
 	private static final DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.Mysql);
 	private int id = -1;
 
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		doGet(req, resp);
-	}
-
-	@Override
 	public void init() throws ServletException {
-		// TODO 这里是临时增加
-		DataBaseHandle.getDBHandle(DBType.Mysql).init("127.0.0.1", "3306", "test", "root", "123456");
+	
 	}
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		req.setCharacterEncoding("UTF-8");
 		resp.setCharacterEncoding("UTF-8");
 		resp.setHeader("content-type", "text/html;charset=UTF-8");
 
@@ -56,7 +50,7 @@ public class MachinesInfo extends HttpServlet{
 
 		if (gettype == null) {
 			log.warning("没有gettype参数,操作中止");
-			resp.getWriter().println(String.format(Constant.respLoginTrue, "传入参数不足够,需要gettype参数."));
+			resp.getWriter().print(String.format(Constant.respGeneralFaile, "传入参数不足够,需要gettype参数.",7));
 			return;
 		}
 
@@ -81,18 +75,18 @@ public class MachinesInfo extends HttpServlet{
 				id = Integer.parseInt(req.getParameter(Constant.reqParaId));
 			} catch (Exception e) {
 				log.warning("没有id参数,或者Id参数不正确,操作中止");
-				resp.getWriter().println(String.format(Constant.respLoginTrue, "没有id参数,或者Id参数不正确,操作中止."));
+				resp.getWriter().println(String.format(Constant.respLoginOk, "没有id参数,或者Id参数不正确,操作中止."));
 				return;
 			}
 			getMachinesInfoOne(write);
 			break;
 		default:
-			write.println(String.format(Constant.respGeneralFalse, "未知的请求方式!", 1));
+			write.println(String.format(Constant.respGeneralFaile, "未知的请求方式!", 1));
 			break;
 		}
 
 	}
-
+	
 	private void getMachinesInfoOne(PrintWriter write) {
 		String sql = "select mi.id,mi.cpuratio,mi.freedisk,mi.useddisk,mi.freemem,mi.freephymem,mi.maxmem,ifnull(mi.online,0) as online,"
 				+ "mi.gettime,mi.totaldisk,mi.totalmem,mi.totalphymem,mi.totalthread,mi.usedphymem,m.mname,m.osname "

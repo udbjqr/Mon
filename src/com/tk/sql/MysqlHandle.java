@@ -21,8 +21,9 @@ public final class MysqlHandle extends DataBaseHandle{
 	private static final DBConnectPool pool = DBConnectPool.getIns();
 
 	private String connStr;
-//	private String user;
-//	private String passwd;
+	private boolean inited = false;
+	// private String user;
+	// private String passwd;
 
 	public static MysqlHandle getIns() {
 		return ins;
@@ -38,17 +39,20 @@ public final class MysqlHandle extends DataBaseHandle{
 
 	@Override
 	public void init(String server, String port, String db, String user, String passwd) {
-		log.fine("初始化数据库连接池.");
-		
-		connStr = String.format("jdbc:mysql://%s:%s/%s", server, port, db);
-//		this.user = user;
-//		this.passwd = passwd;
-		try {
-			for (int i = 0; i < 10; i++) {
-				new com.tk.sql.Connection(DriverManager.getConnection(connStr, user, passwd));
+		if (!inited) {
+			inited = true;
+			log.fine("初始化数据库连接池.");
+
+			connStr = String.format("jdbc:mysql://%s:%s/%s", server, port, db);
+			// this.user = user;
+			// this.passwd = passwd;
+			try {
+				for (int i = 0; i < 10; i++) {
+					new com.tk.sql.Connection(DriverManager.getConnection(connStr, user, passwd));
+				}
+			} catch (SQLException e) {
+				log.log(Level.SEVERE, "初始化数据库连接失败:", e);
 			}
-		} catch (SQLException e) {
-			log.log(Level.SEVERE, "初始化数据库连接失败:", e);
 		}
 	}
 
@@ -74,7 +78,7 @@ public final class MysqlHandle extends DataBaseHandle{
 	@Override
 	public int selectWithInt(String sql) {
 		ResultSet set = select(sql);
-		int res = -1;
+		int res = Integer.MIN_VALUE;
 
 		try {
 			while (set.next()) {
@@ -107,6 +111,7 @@ public final class MysqlHandle extends DataBaseHandle{
 	@Override
 	public void close(ResultSet set) {
 		try {
+			log.finest("关闭一个连接.");
 			Statement st = set.getStatement();
 			Connection con = st.getConnection();
 			set.close();

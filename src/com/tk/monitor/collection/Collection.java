@@ -24,4 +24,13 @@ public interface Collection extends Runnable{
 	public int getAgent();
 	
 	public CollectionType getType();
+	
+	public int getInterval();
+	
+	public int getId();
+	
+	public long getLastRunTime();
+	
+	public void collection();
+	
 }

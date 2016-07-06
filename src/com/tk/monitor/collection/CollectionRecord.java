@@ -14,7 +14,5 @@ public interface CollectionRecord{
 	 * 简单的将采集到的数据形成的Json格式进行保存.
 	 * @param collData 采集到的数据的json格式.
 	 */
-	public void save(Collection coll,String collDataJson);
-	
-	
+	public void save(CollectionType coll,String collDataJson);
 }

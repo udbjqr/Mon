@@ -24,17 +24,17 @@ public final class Constant{
 	/**
 	 * 登录成功使用的字符串
 	 */
-	public final static String respLoginTrue = "{res:true}";
+	public final static String respLoginOk = "{res:true}";
 
 	/**
 	 * 返回失败时使用的通用字符串
 	 */
-	public final static String respGeneralFalse = "{res:false,reason:\"%s\",errorid:%d}";
+	public final static String respGeneralFaile = "{res:false,reason:\"%s\",errorid:%d}";
 
 	/**
 	 * 返回错误:用户名或密码错误.
 	 */
-	public final static String respLoginFalseWithUserOrPass = String.format(Constant.respLoginTrue, "用户名或密码错误.", -1);
+	public final static String respLoginFalseWithUserOrPass = String.format(Constant.respGeneralFaile, "用户名或密码错误.", -1);
 
 	/**
 	 * 返回错误:用户还未登录
@@ -73,5 +73,17 @@ public final class Constant{
 			+ "cpuRatio:%d,totalDisk:%d,usedDisk:%d,freeDisk:%d}";
 	
 	
+	/**
+	 * Agent:传输数据时参数:数据
+	 */
+	public final static String AgentExPara_Data = "data";
+	/**
+	 * Agent:传输数据时参数:类型
+	 */
+	public final static String AgentExPara_Type = "type";
+	/**
+	 * Agent:传输数据时参数:请求初始化数据
+	 */
+	public final static String AgentExPara_InitData = "init";
 	
 }
