@@ -119,7 +119,7 @@
 	失败返回:
 		{res:false,reason:"XXX",errorid:xx}
 
-5.给出总的服务数量以及所有服务列表:
+5.给出总的接口调用数量以及所有接口调用列表:
 	请求地址:./ServerInfo
 	请求信息:
 	?gettype=all&begintime="XXX"&endtime="XXX"&interval=xx
@@ -139,83 +139,78 @@
 			{id:xx,name:"XXX",type:xx,details:{"XXX"}}
 			...
 			]}
-	count:服务总数
-	online:在线的服务数
-	offline:离线的服务数
-	data:所有服务相对应的数据
-		id:服务在监控系统当中注册的id号
-		name:服务在监控系统当中注册的名称
-		type:指明此服务的类型
+	count:接口调用总数
+	online:在线的接口调用数
+	offline:离线的接口调用数
+	data:所有接口调用相对应的数据
+		id:接口调用在监控系统当中注册的id号
+		name:接口调用在监控系统当中注册的名称
+		type:指明此接口调用的类型
 		details:一个单独的json,此对象根据不同的type,有不同的数据,具体的见下
 		
 	失败返回:
 		{res:false,reason:"XXX",errorid:xx}
 	
-6.给出所有服务器大概信息
+6.给出所有接口调用器大概信息
 	请求地址:./ServerInfo
 	请求信息:
 		?gettype=probably
-		?gettype=probably 请求服务概要数据
+		?gettype=probably 请求接口调用概要数据
 		
 	成功返回:
 		{res:true,count:xx,online:xx,offline:xx,data:[
 			{id:xx,name:"XXX",type:xx}
 			...
 			]}
-	count:服务总数
-	online:在线的服务数
-	offline:离线的服务数
-	data:所有服务相对应的数据
-		id:服务在监控系统当中注册的id号
-		name:服务在监控系统当中注册的名称
-		type:指明此服务的类型
+	count:接口调用总数
+	online:在线的接口调用数
+	offline:离线的接口调用数
+	data:所有接口调用相对应的数据
+		id:接口调用在监控系统当中注册的id号
+		name:接口调用在监控系统当中注册的名称
+		type:指明此接口调用的类型
 		
 	失败返回:
 		{res:false,reason:"XXX",errorid:xx}
 	
-7.给出单个服务器详细信息
+7.给出单个接口调用器详细信息
 	请求地址:./ServerInfo
 	请求信息:
 		?gettype=one&id=xx&begintime="XXX"&endtime="XXX"&interval=xx
-		gettype:one 指明请求为单个服务
+		gettype:one 指明请求为单个接口调用
 		id:指明请求获得数据的ID
 
 	
 	成功返回:
-		{res:true,id:xx,online:true/false,name:"XXX",type:xx,details:{"XXX"}}
-	count:服务总数
-	online:指明此服务是否在线
-	type:指明此服务的类型
-	details:一个单独的json,此对象根据不同的type,有不同的数据,具体的见下
-		
+		{res:true,id:xx,name:"XXX",mintime:"XXX",maxtime:"XXX",details:[{cost_time:xx,callnum:xx}...]}
+	id:接口的id
+	name:接口的名称
+	mintime:获得数据最小时间
+	maxtime:获得数据最大时间
+	details:根据时间间隔获得的数据
+
+		cost_time: 调用的平均花费时间值
+		callnum: 这一段时间内总调用次数
 	失败返回:
 		{res:false,reason:"XXX",errorid:xx}
 	
-8.不同type给出的不同数据格式
-	type值:1 WEB访问.details内容:
-		{reqamount:[{interval:xx,value:xx}...],
-			useagent:[{name:"XXX",value:xx}...]
-		}
-		reqamount:指明访问量数据
-			interval:指明第几个间隔的数据
-			value:此间隔时间所获得的数据
-		useagent:用户所使用的客户端
-			name:客户端名称,如IE...
-			value:此间隔的客户端数量
-		此type在请求时需要给出相应的启始时间和结束时间,以及统计数据间隔的时间.
+
+		
 		
 二、采集部分接口
 	此部分接口为机器内部使用。不同的采集类型不同的接口。
 1.采集机器信息 type = 1
-		{res:true,id:xx,online:true/false,
+		{id:xx,gettime:"XXX",
 			totalmemory:xx,freememory:xx,maxmemory:xx,osname:"XXX",
 			totalphysicalmemory:xx,freephysicalmemory:xx,usedphysicalmemory:xx,totalthread:xx,
 			cpuratio:xx,totaldisk:xx,freedisk:xx}
+	采集接口信息 type = 2
+	{id:xx,gettime:"XXX",lastid:xx,cost_time:xx,callnum:xx}
 2.Agent与server接口传输方式
 	地址:/monitor/Agent
 		a.传输方式为:type=采集类型&data=数据的方式传输;
 		b.Agent请求初始化数据.请求为:init=xx此值任意,目前无意义.
-			返回:"{res:true,agent:xx,data:[{type:xx,ispaush:xx,collinterval:xx,collid:xx}...]}"
+			返回:"{res:true,agent:xx,data:[{type:xx,id:xx,ispaush:xx,collinterval:xx,collid:xx,lastCollTime:"XXX",collDimension:xx,lastColl:"XXX"}...]}"
 			res:true 指明传输成功
 			agent:指明此agent的代理号
 			data:采集的数据
@@ -223,6 +218,9 @@
 				ispaush:是否暂停采集
 				collinterval:采集的间隔时间
 				collid:采集对象的id
+				lastCollTime 最后的采集时间,标明服务端保存的最后的采集时间的信息.
+				collDimension 采集的大小
+				lastColl: 最后的采集对象,此值根据每个采集类型不同,各自定义.
 				
 	注:
 		server端是根据agent端的iP地址来返回相应数据.如agent修改了IP地址,需要在server端进行相应修改.

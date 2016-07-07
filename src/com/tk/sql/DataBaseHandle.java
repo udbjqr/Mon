@@ -13,7 +13,7 @@ import java.sql.Connection;
  *
  */
 public abstract class DataBaseHandle{
-	protected static final Logger log = Logging.getLogger();
+	protected static final Logger log = Logging.getLogger("sql");
 	
 	public static DataBaseHandle getDBHandle(DBType type){
 		switch (type) {
@@ -35,7 +35,7 @@ public abstract class DataBaseHandle{
 	 */
 	protected abstract Connection getConnection();
 	
-	public abstract void init(String server,String port,String db,String user,String passwd);
+	public abstract void init(String server,String port,String db,String user,String passwd,int poolnum);
 	
 	/**
 	 * 执行一个更新或者删除操作.

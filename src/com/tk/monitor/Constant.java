@@ -45,7 +45,18 @@ public final class Constant{
 	 * 请求:指明请求的方式:所有/单个/概要
 	 */
 	public final static String reqParaGetType = "gettype";
-
+	/**
+	 * 请求:指明请求开始时间
+	 */
+	public final static String reqParaBeginTime = "begintime";
+	/**
+	 * 请求:指明请求的截止时间
+	 */
+	public final static String reqParaEndTime = "endtime";
+	/**
+	 * 请求:指明请求的间隔时间.为1的整数倍,以分钟为基准
+	 */
+	public final static String reqParaInterval = "interval";
 	/**
 	 * 请求方式:所有
 	 */
@@ -71,7 +82,7 @@ public final class Constant{
 			+ "totalMemory:%d,freeMemory:%d,maxMemory:%d,osName:\"%s\","
 			+ "totalPhysicalMemory:%d,freePhysicalMemory:%d,usedPhysicalMemory:%d,totalThread:%d,"
 			+ "cpuRatio:%d,totalDisk:%d,usedDisk:%d,freeDisk:%d}";
-	
+
 	
 	/**
 	 * Agent:传输数据时参数:数据

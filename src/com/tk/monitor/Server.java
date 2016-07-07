@@ -13,6 +13,7 @@ import com.tk.logger.Logging;
 import com.tk.monitor.collection.Collection;
 import com.tk.monitor.collection.CollectionRecord;
 import com.tk.monitor.collection.CollectionType;
+import com.tk.monitor.collection.InterfaceColl;
 import com.tk.monitor.collection.Machines;
 import com.tk.sql.DBType;
 import com.tk.sql.DataBaseHandle;
@@ -33,6 +34,8 @@ public class Server implements CollectionRecord, Runnable{
 	private final String machineInsertDBStr = "insert into machinesinfo (id, gettime, online, totalmem, freemem, maxmem, totalphymem, "
 			+ "freephymem, usedphymem, totalthread, cpuratio, totaldisk, useddisk,freedisk) "
 			+ " values(%s,'%s',1,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)";
+	private final String interfaceInsertDBStr = "insert into interfaceinfo (collid, gettime, online, cost_time, callnum, lastcollid) "
+			+ " values(%s,%s,1,%s,%s,%s);";
 
 	private List<Collection> colls = new LinkedList<Collection>();
 
@@ -44,28 +47,52 @@ public class Server implements CollectionRecord, Runnable{
 		return ins;
 	}
 
+	/**
+	 * 此服务是否已经停止.
+	 * 
+	 * <p>
+	 * 当stop()时,设置此值,必须等线程运行完全自动停止,而不是立即终止
+	 * 
+	 * @return false 正在运行.
+	 */
 	public boolean isShutDown() {
 		return shutDown;
 	}
 
+	/**
+	 * 停止服务.
+	 */
 	public synchronized void stop() {
 		shutDown = true;
 		this.notify();
 	}
 
+	/**
+	 * 返回代理请求的所有相关信息.
+	 * 
+	 * <p>
+	 * 包含代理所需要采集相关信息.
+	 * 
+	 * @param ipAdd
+	 *          代理的IP.根据此值确定某一个代理
+	 * @return 一个json格式的字符串,指明代理需要的信息.
+	 */
 	public String getAgentCollectionsJson(String ipAdd) {
 		StringBuilder sb = new StringBuilder();
 		int agentId = dbh.selectWithInt("select * from agent where ipadd = '" + ipAdd + "';");
-		//没有找到对应IP的记录.
-		if(agentId == Integer.MIN_VALUE){
+		// 没有找到对应IP的记录.
+		if (agentId == Integer.MIN_VALUE) {
 			log.warning("未找到对应ip的记录,请检查,IP:" + ipAdd);
 		}
-		
-		// "{res:true,agent:1,data:[{type:0,ispaush:1,collinterval:2,collid:2}]}"
+
+		// "{res:true,agent:xx,data:[{type:xx,ispaush:xx,collinterval:xx,collid:xx,
+		// lastCollTime:"XX",collDimension:xx,lastColl:"XX"}...]}"
 		for (Collection coll : colls) {
 			if (coll.getAgent() == agentId) {
-				sb.append("{type:" + coll.getType().ordinal() + ",ispaush:" + (coll.isPause() ? "true" : "false") + ",collinterval:"
-						+ coll.getInterval() / 1000 + ",collid:" + coll.getId() + "},");
+				sb.append(
+						"{type:" + coll.getType().ordinal() + ",id:" + coll.getId() + ",ispaush:" + (coll.isPause() ? "true" : "false") + ",collinterval:"
+								+ coll.getInterval() / 1000 + ",collid:" + coll.getCollid() + ",lastCollTime:" + coll.getLastRunTime()
+								+ ",collDimension:" + coll.getCollDimension() + ",lastColl:" + coll.getLastColl() + "},");
 			}
 		}
 		if (sb.length() > 0) {
@@ -73,11 +100,14 @@ public class Server implements CollectionRecord, Runnable{
 		}
 		sb.insert(0, "{res:true,agent:" + agentId + ",data:[");
 		sb.append("]}");
-		
+
 		log.fine("准备向agent传送数据:" + sb.toString());
 		return sb.toString();
 	}
 
+	/**
+	 * 将采集到的数据保存到持久化的过程.
+	 */
 	@Override
 	public void save(CollectionType colltype, String collDataSql) {
 		JSONObject js = new JSONObject(collDataSql);
@@ -88,6 +118,10 @@ public class Server implements CollectionRecord, Runnable{
 					js.get("freememory"), js.get("maxmemory"), js.get("totalphysicalmemory"), js.get("freephysicalmemory"),
 					js.get("usedphysicalmemory"), js.get("totalthread"), js.get("cpuratio"), js.get("totaldisk"),
 					js.get("useddisk"), js.get("freedisk")));
+			break;
+		case InterfaceCall:
+			dbh.update(String.format(interfaceInsertDBStr, js.getString("id"),js.getString("gettime"),
+					js.getString("cost_time"),js.getString("callnum"),js.getString("lastcollid")));
 			break;
 		default:
 			break;
@@ -100,9 +134,9 @@ public class Server implements CollectionRecord, Runnable{
 	public void init() {
 		log.finer("初始化开始.");
 
-		if(!shutDown){
+		if (!shutDown) {
 			stop();
-			
+
 			synchronized (this) {
 				try {
 					wait(500);
@@ -110,13 +144,14 @@ public class Server implements CollectionRecord, Runnable{
 				}
 			}
 		}
-		
+
 		colls.clear();
 		ResultSet rs = dbh.select("select * from machines;");
 		try {
 			while (rs.next()) {
-				colls.add(getCollection(rs.getInt(FieldName.M_Flag), rs.getInt(FieldName.Id),
-						rs.getInt(FieldName.M_CollInterval), rs.getInt(FieldName.M_IsPause), rs.getInt(FieldName.M_Agent)));
+				colls.add(
+						getCollection(rs.getInt(FieldName.M_Flag),rs.getInt(FieldName.Id),rs.getInt(FieldName.M_CollId), rs.getInt(FieldName.M_CollInterval),
+								rs.getInt(FieldName.M_CollDimension), rs.getInt(FieldName.M_IsPause), rs.getInt(FieldName.M_Agent)));
 			}
 		} catch (SQLException e) {
 			log.log(Level.SEVERE, "", e);
@@ -126,21 +161,28 @@ public class Server implements CollectionRecord, Runnable{
 		log.finer("初始化完成.");
 	}
 
-	private Collection getCollection(int type, int id, int collInterval, int ispause, int agent) {
+	private Collection getCollection(int type, int id, int collInterval, int collDimension, int ispause, int agent,int collid) {
+		switch (CollectionType.values()[type]) {
+		case Machine:
+			return new Machines(this,id, agent, ispause == 0, collInterval, collid);
+		case InterfaceCall:
+			return new InterfaceColl(this,id, agent, collid, collInterval, collDimension, 0, 0, ispause == 0);
+		default:
+			break;
+		}
 		if (type == CollectionType.Machine.ordinal()) {
-			return new Machines(this, agent, ispause == 0, collInterval, id);
+
 		}
 		return null;
 	}
 
 	/**
-	 * 线程执行过程
+	 * 线程执行过程.
 	 */
 	@Override
 	public synchronized void run() {
 		log.info("开始启动线程.");
-		
-		
+
 		for (Collection coll : colls) {
 			if (!coll.isPause() && coll.getAgent() == 0 && coll.isShutDown()) {
 				coll.start();
@@ -155,7 +197,7 @@ public class Server implements CollectionRecord, Runnable{
 					coll.collection();
 				}
 			}
-			
+
 			try {
 				wait();
 			} catch (InterruptedException e) {

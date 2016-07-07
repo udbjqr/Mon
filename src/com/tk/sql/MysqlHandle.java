@@ -38,7 +38,7 @@ public final class MysqlHandle extends DataBaseHandle{
 	}
 
 	@Override
-	public void init(String server, String port, String db, String user, String passwd) {
+	public void init(String server, String port, String db, String user, String passwd,int poolnum) {
 		if (!inited) {
 			inited = true;
 			log.fine("初始化数据库连接池.");
@@ -47,7 +47,7 @@ public final class MysqlHandle extends DataBaseHandle{
 			// this.user = user;
 			// this.passwd = passwd;
 			try {
-				for (int i = 0; i < 10; i++) {
+				for (int i = 0; i < poolnum; i++) {
 					new com.tk.sql.Connection(DriverManager.getConnection(connStr, user, passwd));
 				}
 			} catch (SQLException e) {

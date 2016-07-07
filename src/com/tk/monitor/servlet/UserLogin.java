@@ -13,9 +13,8 @@ import com.tk.monitor.Constant;
 import com.tk.monitor.users.User;
 
 public class UserLogin extends HttpServlet{
-
 	private static final long serialVersionUID = 1365502106021685020L;
-	private static final Logger log = Logging.getLogger();
+	private static final Logger log = Logging.getLogger("Servlet");
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

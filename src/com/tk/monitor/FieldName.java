@@ -68,6 +68,10 @@ public final class FieldName{
 	 */
 	public static final String M_Name = "mname";
 	/**
+	 * 机器表:采集对象Id
+	 */
+	public static final String M_CollId = "collid";
+	/**
 	 * 机器表:操作系统名称
 	 */
 	public static final String M_OSName = "osname";
@@ -88,6 +92,11 @@ public final class FieldName{
 	 * 机器表:此采集间隔时间
 	 */
 	public static final String M_CollInterval = "collinterval";
+	/**
+	 * 机器表:此采集的粒度.仅用于接口调用.
+	 */
+	public static final String M_CollDimension = "colldimension";
+	
 	/**
 	 * 机器表:是否暂停采集,1:正常,0:暂停
 	 */

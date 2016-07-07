@@ -18,6 +18,7 @@ import com.tk.logger.Logging;
 import com.tk.monitor.collection.Collection;
 import com.tk.monitor.collection.CollectionRecord;
 import com.tk.monitor.collection.CollectionType;
+import com.tk.monitor.collection.InterfaceColl;
 import com.tk.monitor.collection.Machines;
 
 /**
@@ -27,11 +28,11 @@ import com.tk.monitor.collection.Machines;
  *
  */
 public class Agent implements CollectionRecord, Runnable{
-	private static final Logger log = Logging.getLogger();
+	private static final Logger log = Logging.getLogger("com.tk.monitor.agent");
 	private String sessionStr = null;
 	private final String serverAddr;
 	private URL url = null;
-  
+
 	private Thread th;
 
 	private boolean shutDown = true;
@@ -80,6 +81,9 @@ public class Agent implements CollectionRecord, Runnable{
 		notify();
 	}
 
+	/**
+	 * 代理启动过程.
+	 */
 	@Override
 	public void run() {
 		log.fine("启动Agent线程.");
@@ -122,6 +126,12 @@ public class Agent implements CollectionRecord, Runnable{
 
 	}
 
+	/**
+	 * 构造函数,在这函数里构造所有采集对象.
+	 * 
+	 * @param serverAddr
+	 *          服务端IP地址.
+	 */
 	public Agent(String serverAddr) {
 		this.serverAddr = serverAddr;
 
@@ -136,13 +146,17 @@ public class Agent implements CollectionRecord, Runnable{
 
 		id = jo.getInt("agent");
 
-		// "{res:true,agent:1,data:[{type:0,ispaush:1,collinterval:2,collid:2}]}"
+		// "{res:true,agent:xx,data:[{type:xx,ispaush:xx,collinterval:xx,collid:xx,
+		// lastCollTime:"XX",collDimension:xx,lastColl:"XX"}...]}"
 		for (Object obj : jo.getJSONArray("data")) {
 			JSONObject j = (JSONObject) obj;
 			switch (CollectionType.values()[j.getInt("type")]) {
 			case Machine:
-				colls.add(new Machines(this, id, j.getBoolean("ispaush"), j.getInt("collinterval"), j.getInt("collid")));
+				colls.add(new Machines(this, j.getInt("id"),id,j.getBoolean("ispaush"), j.getInt("collinterval"), j.getInt("collid")));
 				break;
+			case InterfaceCall:
+				colls.add(new InterfaceColl(this, j.getInt("id"),id, j.getInt("collid"), j.getInt("collinterval"), j.getInt("collDimension"),
+						j.getLong("lastCollTime"), j.getInt("lastColl"), j.getBoolean("ispaush")));
 			default:
 				log.severe("错误的类型.");
 				break;

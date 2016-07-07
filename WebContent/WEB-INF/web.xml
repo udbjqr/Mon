@@ -18,7 +18,7 @@
 	</servlet>
 	<servlet>
 		<servlet-name>GetServerInfo</servlet-name>
-		<servlet-class>com.tk.monitor.servlet.ServerInfo</servlet-class>
+		<servlet-class>com.tk.monitor.servlet.InterfaceCallInfo</servlet-class>
 	</servlet>
 	<servlet>
 		<servlet-name>AgentExchang</servlet-name>

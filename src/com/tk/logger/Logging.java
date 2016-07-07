@@ -1,9 +1,11 @@
 package com.tk.logger;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
+import java.net.URISyntaxException;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -19,32 +21,38 @@ import java.util.logging.Logger;
  *
  */
 
-public class Logging{
-	private static Logger logger = null;
-	// 只在本对象当中使用.
-	private static Logger logging = Logger.getLogger(Logging.class.getName());
+public final class Logging{
 
-	private Logging() {
+	static {
+		// TODO 在tomcat里面无法读取到这个值
+		InputStream is = Logging.class.getClass().getResourceAsStream("/log.properties");
+		if (is == null) {
+			try {
+				is = new FileInputStream(new File(Logging.class.getClassLoader().getResource("").toURI().getPath()+"/log.properties"));
+			} catch (FileNotFoundException | URISyntaxException e) {
+				e.printStackTrace();
+			}
+		}
+			
+		try {
+			LogManager.getLogManager().readConfiguration(is);
+		} catch (Exception e) {
+			System.err.println("输入文件错误,未找到对应的值." + e.toString());
+		} finally {
+			try {
+				is.close();
+			} catch (IOException e) {
+				System.err.println("close FileInputStream a case.\n" + e.toString());
+			}
+		}
 	}
 
 	public static Logger getLogger() {
-		if (null == logger) {
-			InputStream is = Logging.class.getClass().getResourceAsStream("/log.properties");
-			try {
-				LogManager.getLogManager().readConfiguration(is);
-			} catch (Exception e) {
-				logging.warning("input properties file is error.\n" + e.toString());
-			} finally {
-				try {
-					is.close();
-				} catch (IOException e) {
-					logging.warning("close FileInputStream a case.\n" + e.toString());
-				}
-			}
+		return Logger.getLogger("LOGGER");
+	}
 
-			logger = Logger.getLogger("LOGGER");
-		}
-		return logger;
+	public static Logger getLogger(String name) {
+		return Logger.getLogger(name);
 	}
 
 }

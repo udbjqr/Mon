@@ -2,8 +2,6 @@ package com.tk.monitor.agent;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
 import java.util.logging.Logger;
 
 import com.tk.logger.Logging;
@@ -24,7 +22,7 @@ public class TestAgent implements Runnable{
 	}
 
 	public TestAgent() {
-		dbh.init("127.0.0.1", "3306", "test", "root", "123456");
+		dbh.init("127.0.0.1", "3306", "test", "root", "123456",5);
 	}
 
 	@Override
@@ -32,11 +30,9 @@ public class TestAgent implements Runnable{
 		for (int i = 0; i < 200; i++) {
 
 			ResultSet rs = dbh.select("select * from machinesinfo m;");
-			String s = "";
 			try {
 				while (rs.next()) {
 					System.out.print(rs.getString(2) + "\t");
-					s = rs.getString(2) ;
 				}
 				log.info(String.valueOf(i));
 			} catch (SQLException e) {

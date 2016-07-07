@@ -10,5 +10,9 @@ public enum CollectionType {
 /**
  * 采集机器信息。此类型代码为0
  */
-	Machine;
+	Machine,
+	/**
+	 * 接口调用情况,代码为1
+	 */
+	InterfaceCall;
 }

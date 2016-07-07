@@ -22,7 +22,7 @@ import java.sql.Connection;
  *
  */
 public class DBConnectPool{
-	private static final Logger log = Logging.getLogger();
+	private static final Logger log = Logging.getLogger("sql");
 	private static final DBConnectPool ins = new DBConnectPool();
 	private final Map<Connection, com.tk.sql.Connection> rc = new Hashtable<>();
 
@@ -44,9 +44,8 @@ public class DBConnectPool{
 			if (i % size == 0) {
 				// 如果所有都忙,等待.
 				try {
-					log.finest("大家都特别忙,休息一下.");
+					log.finest("大家都特别忙,在这里等一下.");
 					wait();
-					log.finest("有通知来了.看看有没有空闲的.");
 				} catch (InterruptedException e) {
 				}
 			}
@@ -67,6 +66,7 @@ public class DBConnectPool{
 		if (cons.isEmpty()) {
 			cons.add(myconn);
 			nowFree = myconn;
+			myconn.next = myconn;
 		} else {
 			cons.getLast().next = myconn;
 			myconn.next = cons.getFirst();

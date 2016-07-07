@@ -21,11 +21,12 @@ import sun.management.ManagementFactoryHelper;
  *
  */
 public class Machines implements Collection{
-	private static final Logger log = Logging.getLogger();
+	private static final Logger log = Logging.getLogger("Collection");
 
 	private int collInterval;
-	private int machineId;
-	private final CollectionRecord server;
+	private final int id;
+	private final int machineId;
+	private final CollectionRecord collRecord;
 	private String jsonStr;
 	private final CollectionType type = CollectionType.Machine;
 
@@ -111,7 +112,7 @@ public class Machines implements Collection{
 
 			log.finer("采集到数据:" + str);
 
-			server.save(type, str);
+			collRecord.save(type, str);
 
 			// 停止相应间隔时间
 			try {
@@ -267,7 +268,7 @@ public class Machines implements Collection{
 
 	@Override
 	public int getId() {
-		return machineId;
+		return id;
 	}
 
 	public CollectionType getType() {
@@ -281,11 +282,12 @@ public class Machines implements Collection{
 	 *          以秒为单位的间隔时间
 	 * @param machineId
 	 *          指明此采集到的数据在监控系统当中的ID
-	 * @param server
+	 * @param collRecord
 	 *          将采集数据送至此对象
 	 */
-	public Machines(CollectionRecord server, int agent, boolean pause, int collInterval, int id) {
-		this.server = server;
+	public Machines(CollectionRecord collRecord, int id,int agent, boolean pause, int collInterval, int collid) {
+		this.collRecord = collRecord;
+		this.id = id;
 		this.agent = agent;
 		this.pause = pause;
 		this.collInterval = collInterval * 1000;
@@ -340,5 +342,20 @@ public class Machines implements Collection{
 		if (!shutDown) {
 			notify();
 		}
+	}
+	
+	@Override
+	public String getLastColl() {
+		return "";
+	}
+
+	@Override
+	public int getCollDimension() {
+		return 0;
+	}
+
+	@Override
+	public int getCollid() {
+		return machineId;
 	}
 }

@@ -21,7 +21,7 @@ public class TomcatListener implements ServletContextListener{
 	public void contextInitialized(ServletContextEvent arg0) {
 		log.info("Tomcat启动.");
 		// TODO 这里是临时增加,这个需要在初始化的时候增加
-		DataBaseHandle.getDBHandle(DBType.Mysql).init("127.0.0.1", "3306", "test", "root", "123456");
+		DataBaseHandle.getDBHandle(DBType.Mysql).init("127.0.0.1", "3306", "test", "root", "123456",10);
 	}
 
 }
