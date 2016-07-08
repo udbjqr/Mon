@@ -22,7 +22,7 @@ import com.tk.sql.DataBaseHandle;
  */
 public class InterfaceColl implements Collection{
 	private static final Logger log = Logging.getLogger("Collection");
-	private static final DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.Mysql);
+	private static final DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.MYSQL);
 
 	private final int id;
 	private final int collobjId;
@@ -39,6 +39,7 @@ public class InterfaceColl implements Collection{
 	private final Date dat = new Date();
 	private Thread th;
 	private boolean shutDown = true;
+	private boolean online = true;
 
 	private final String jsonStr;
 	// 测试是否有数据可读的sql
@@ -46,14 +47,13 @@ public class InterfaceColl implements Collection{
 	// 读取数据的sql
 	private final String readStr;
 
-	public InterfaceColl(CollectionRecord collRecord, int id,int agent, int collobjId, int collinterval, int collDimension,
-			long lastRunTime, int lastCollid, boolean pause) {
-		init();
+	public InterfaceColl(CollectionRecord collRecord, int id, int agent, int collobjId, int collinterval,
+			int collDimension, long lastRunTime, int lastCollid, boolean pause) {
 		this.id = id;
 		this.collobjId = collobjId;
 		this.collRecord = collRecord;
 		this.agent = agent;
-		this.collinterval = collinterval;
+		this.collinterval = collinterval * 1000 * 60;
 		this.pause = pause;
 		this.collDimension = collDimension;
 		this.lastCollid = lastCollid;
@@ -100,13 +100,8 @@ public class InterfaceColl implements Collection{
 				+ "from t_uigw_sysinvokelog where id > %1$d and id <= %2$d  and " + dimensionColName + " = %3$d ;";
 	}
 
-	private void init() {
-		dbh.init("127.0.0.1", "3306", "test", "root", "123456", 2);
-		// TODO 此方法初始化对连接对象
-	}
-
 	@Override
-	public void run() {
+	public synchronized void run() {
 		log.info("采集开始启动,id:" + collobjId);
 		while (!shutDown) {
 			log.finest("开始采集数据.");
@@ -123,7 +118,8 @@ public class InterfaceColl implements Collection{
 						lastCollid = rs.getLong("lastid");
 
 						dat.setTime(lastRunTime);
-						str = String.format(jsonStr, rs.getString("gettime"), rs.getDouble("cost_time"), rs.getInt("callnum"), rs.getLong("lastid"));
+						str = String.format(jsonStr, rs.getString("gettime"), rs.getDouble("cost_time"), rs.getInt("callnum"),
+								rs.getLong("lastid"));
 					}
 
 					dbh.close(rs);
@@ -147,7 +143,10 @@ public class InterfaceColl implements Collection{
 
 	@Override
 	public synchronized void collection() {
-		notify();
+		lastRunTime = System.currentTimeMillis();
+		if (!shutDown) {
+			notify();
+		}
 	}
 
 	@Override
@@ -201,9 +200,9 @@ public class InterfaceColl implements Collection{
 	public int getId() {
 		return id;
 	}
-	
+
 	@Override
-	public int getCollid(){
+	public int getCollid() {
 		return collobjId;
 	}
 
@@ -224,6 +223,16 @@ public class InterfaceColl implements Collection{
 
 	public String getCollconfinfo() {
 		return collconfinfo;
+	}
+
+	@Override
+	public boolean isOnline() {
+		return online;
+	}
+	
+	@Override
+	public void setOnline(boolean online) {
+		this.online = online;
 	}
 
 }

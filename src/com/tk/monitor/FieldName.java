@@ -83,6 +83,10 @@ public final class FieldName{
 	 * 机器表:标志,0:机器,1:web系统
 	 */
 	public static final String M_Flag = "flag";
+/**
+	 * 机器表:在线标志:1:在线,0:离线
+	 */
+	public static final String M_IsOnline = "online";	
 	
 	/**
 	 * 机器表:指明此采集为哪一个代理,默认自己

@@ -1,62 +1,25 @@
 package com.tk.monitor.agent;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.logging.Logger;
-
-import com.tk.logger.Logging;
-import com.tk.sql.DBType;
-import com.tk.sql.DataBaseHandle;
-
-public class TestAgent implements Runnable{
-	DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.Mysql);
-	private static final Logger log = Logging.getLogger();
-
-	public static void main(String[] args) {
-		log.info("abcdefgqropjfijasopfdajspfoiajpfa");
-		
-		for (int i = 0; i < 20; i++) {
-			Thread th = new Thread(new TestAgent());
-			th.start();
-		}
-	}
+public class TestAgent{
 
 	public TestAgent() {
-		dbh.init("127.0.0.1", "3306", "test", "root", "123456",5);
+		// dbh.init("127.0.0.1", "3306", "test", "root", "123456",5);
 	}
 
-	@Override
-	public void run() {
-		for (int i = 0; i < 200; i++) {
+	public static void main(String[] args) {
+		Agent a = new Agent();
+		a.start();
 
-			ResultSet rs = dbh.select("select * from machinesinfo m;");
+		while (true) {
 			try {
-				while (rs.next()) {
-					System.out.print(rs.getString(2) + "\t");
+				Thread.sleep(2000);
+				if (a.isShutDown()) {
+					System.exit(0);
 				}
-				log.info(String.valueOf(i));
-			} catch (SQLException e) {
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
-			dbh.close(rs);
 		}
 	}
-
-	// public static void main(String[] args) {
-	// Agent a = new Agent("192.168.1.128:8080/Mon");
-	// a.start();
-	//
-	// while(true){
-	// try {
-	// Thread.sleep(2000);
-	// if(a.isShutDown()){
-	// System.exit(0);
-	// }
-	// } catch (InterruptedException e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
-	// }
-	// }
 }

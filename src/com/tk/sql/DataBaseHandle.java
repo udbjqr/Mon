@@ -17,12 +17,12 @@ public abstract class DataBaseHandle{
 	
 	public static DataBaseHandle getDBHandle(DBType type){
 		switch (type) {
-		case Mysql:
+		case MYSQL:
 			return MysqlHandle.getIns();
 			//后面所有均直接返回空.
-		case mssqlserver:
-		case Oracle:
-		case Pgsql:
+		case MSSQL:
+		case ORACLE:
+		case PGSQL:
 		default:
 			log.severe("错误的调用数据库初始化对象.");
 			return null;

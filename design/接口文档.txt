@@ -136,17 +136,14 @@
 
 	成功返回:
 		{res:true,count:xx,online:xx,offline:xx,data:[
-			{id:xx,name:"XXX",type:xx,details:{"XXX"}}
+			{id:xx,name:"XXX",mintime:"XXX",maxtime:"XXX",interval:xx,details:[{cost_time:xx,callnum:xx}...]}
 			...
 			]}
 	count:接口调用总数
 	online:在线的接口调用数
 	offline:离线的接口调用数
 	data:所有接口调用相对应的数据
-		id:接口调用在监控系统当中注册的id号
-		name:接口调用在监控系统当中注册的名称
-		type:指明此接口调用的类型
-		details:一个单独的json,此对象根据不同的type,有不同的数据,具体的见下
+		每一个单独的接口调用情况信息,具体见7
 		
 	失败返回:
 		{res:false,reason:"XXX",errorid:xx}
@@ -158,17 +155,7 @@
 		?gettype=probably 请求接口调用概要数据
 		
 	成功返回:
-		{res:true,count:xx,online:xx,offline:xx,data:[
-			{id:xx,name:"XXX",type:xx}
-			...
-			]}
-	count:接口调用总数
-	online:在线的接口调用数
-	offline:离线的接口调用数
-	data:所有接口调用相对应的数据
-		id:接口调用在监控系统当中注册的id号
-		name:接口调用在监控系统当中注册的名称
-		type:指明此接口调用的类型
+		目前返回完整详细信息,返回信息同5.
 		
 	失败返回:
 		{res:false,reason:"XXX",errorid:xx}
@@ -182,11 +169,12 @@
 
 	
 	成功返回:
-		{res:true,id:xx,name:"XXX",mintime:"XXX",maxtime:"XXX",details:[{cost_time:xx,callnum:xx}...]}
+		{res:true,id:xx,name:"XXX",mintime:"XXX",maxtime:"XXX",interval:xx,details:[{cost_time:xx,callnum:xx}...]}
 	id:接口的id
 	name:接口的名称
-	mintime:获得数据最小时间
-	maxtime:获得数据最大时间
+	mintime:获得数据最小时间(数据的时间,而不是申请的时间)
+	maxtime:获得数据最大时间(数据的时间,而不是申请的时间)
+	interval:间隔时间,此间隔时间为每一个数据返回的间隔时间,以分钟为单位
 	details:根据时间间隔获得的数据
 
 		cost_time: 调用的平均花费时间值

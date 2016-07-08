@@ -44,10 +44,11 @@ public class Machines implements Collection{
 	private long totalDisk = 0;
 	private long freeDisk = 0;
 	private long usedDisk = 0;
-
+	
 	private final Date dat = new Date();
 	private final int kb = 1024 * 1024;
 
+	private boolean online = true;
 	private boolean shutDown = true;
 	private long lastRunTime = 0;
 	private boolean pause = false;
@@ -339,6 +340,7 @@ public class Machines implements Collection{
 
 	@Override
 	public synchronized void collection() {
+		lastRunTime = System.currentTimeMillis();
 		if (!shutDown) {
 			notify();
 		}
@@ -357,5 +359,15 @@ public class Machines implements Collection{
 	@Override
 	public int getCollid() {
 		return machineId;
+	}
+
+	@Override
+	public boolean isOnline() {
+		return online;
+	}
+
+	@Override
+	public void setOnline(boolean online) {
+		this.online = online;
 	}
 }

@@ -5,7 +5,6 @@ import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,7 +16,6 @@ import javax.servlet.http.HttpSession;
 
 import com.tk.logger.Logging;
 import com.tk.monitor.Constant;
-import com.tk.monitor.FieldName;
 import com.tk.monitor.users.User;
 import com.tk.sql.DBType;
 import com.tk.sql.DataBaseHandle;
@@ -25,7 +23,7 @@ import com.tk.sql.DataBaseHandle;
 public class InterfaceCallInfo extends HttpServlet{
 	private static final long serialVersionUID = -8766613653174134108L;
 	private static final Logger log = Logging.getLogger("Servlet");
-	private static final DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.Mysql);
+	private static final DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.MYSQL);
 	private int id;
 
 	@Override
@@ -56,14 +54,12 @@ public class InterfaceCallInfo extends HttpServlet{
 			resp.getWriter().print(String.format(Constant.respGeneralFaile, "传入参数不足够,请检查传入参数.", 7));
 			return;
 		}
-		Date bt = null;
-		Date et = null;
 		int inl = 1;
 
 		try {
 			SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			bt = sf.parse(beginTime);
-			et = sf.parse(endTime);
+			sf.parse(beginTime);
+			sf.parse(endTime);
 			inl = Integer.parseInt(interval);
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "传入参数格式不正确" + e);
@@ -75,7 +71,7 @@ public class InterfaceCallInfo extends HttpServlet{
 		switch (getType) {
 		case Constant.GetTypeWithAll:
 		case Constant.GetTypeWithProbably:
-			getInfoALL(write, bt, et, inl);
+			getInfoALL(write, beginTime, endTime, inl);
 			break;
 		case Constant.GetTypeWithOne:
 			try {
@@ -96,7 +92,7 @@ public class InterfaceCallInfo extends HttpServlet{
 
 	private void getInfoOne(PrintWriter write, String beginTime, String endTime, int inl) {
 		String sql = "select a.*,b.mname from (select id,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) "
-				+ "FROM interfaceinfo where id = %1$d and gettime between '%2$s' and '%3$s' group by id,i.gettime div (%4$d * 60)) a"
+				+ "FROM interfaceinfo where id = %1$d and gettime between '%2$s' and '%3$s' group by id,gettime div (%4$d * 60)) a"
 				+ " inner join machines b on a.id = b.id";
 
 		ResultSet rs = dbh.select(String.format(sql, id, beginTime, endTime, inl));
@@ -116,62 +112,73 @@ public class InterfaceCallInfo extends HttpServlet{
 			dbh.close(rs);
 
 			if (sb.length() > 0) {
-				sb.delete(sb.length() - 1, sb.length());
+				sb.deleteCharAt(sb.length() - 1);
 			}
 
-			sb.insert(0,
-					String.format("{res:true,id:%1$d,name:\"%2$s\",mintime:\"%3$s\",maxtime:\"%4$s\",details:[", id, na, bt, et))
-					.append("]}");
+			sb.insert(0, String.format("{res:true,id:%1$d,name:\"%s\",mintime:\"%s\",maxtime:\"%s\",interval:%d,details:[",
+					id, na, bt, et, inl)).append("]}");
 
 			write.print(sb.toString());
-			return;
 		} catch (SQLException e) {
-			log.log(Level.SEVERE, "执行获得数据发生异常:", e);
+			log.log(Level.SEVERE, "获得数据发生异常:", e);
 		}
 	}
 
-	private void getInfoALL(PrintWriter write, Date beginTime, Date endTime, int inl) {
-		String sql = "select mi.id,mi.cpuratio,mi.freedisk,mi.useddisk,mi.freemem,mi.freephymem,mi.maxmem,ifnull(mi.online,0) as online,"
-				+ "mi.gettime,mi.totaldisk,mi.totalmem,mi.totalphymem,mi.totalthread,mi.usedphymem,m.mname,m.osname "
-				+ "from machines m left join (select * from machinesinfo mi where not exists "
-				+ "(select 1 from machinesinfo  where mi.id = id and mi.gettime <gettime)) mi on m.id = mi.id and m.flag = 0;";
+	private void getInfoALL(PrintWriter write, String beginTime, String endTime, int inl) {
+		String sql = "select a.*,b.mname,b.online "
+				+ " from (select id,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) "
+				+ "FROM interfaceinfo where gettime between '%1$s' and '%2$s' group by id,gettime div (%3$d * 60)) a"
+				+ " inner join machines b on a.id = b.id order by a.id";
 
-		ResultSet rs = dbh.select(sql);
+		ResultSet rs = dbh.select(String.format(sql, beginTime, endTime, inl));
 
-		StringBuilder sb = new StringBuilder();
-		int on = 0;
-		int off = 0;
-
-		String onlineStr;
 		try {
+			StringBuilder sb = new StringBuilder();
+			int on = 0, off = 0, pid = -1, tempon = 0;
+			String bt = "", et = "", name = "";
 			while (rs.next()) {
-				if (rs.getInt(FieldName.MI_Online) > 0) {
-					onlineStr = "true";
-					on++;
-				} else {
-					onlineStr = "false";
-					off++;
+				if (pid != rs.getInt("id")) {	// 判断是否新的一个数据.
+					if (sb.charAt(sb.length() - 1) == ',') {// 判断最后一个是否为逗号,是的话,删除.因为有可能没有任何数据.
+						sb.deleteCharAt(sb.length() - 1);
+					}
+					
+					if (sb.length() != 0) {// 判断缓冲为空.不为空加尾部.
+						sb.append("]},");
+					}
+					// 第一次进来先取数据.
+					pid = rs.getInt("id");
+					bt = rs.getString("mintime");
+					et = rs.getString("maxtime");
+					name = rs.getString("mname");
+					tempon = rs.getInt("online");
+
+					// 增加信息体内容.
+					sb.insert(0, String.format("{id:%d,name:\"%s\",mintime:\"%s\",maxtime:\"%s\",interval:%d,details:[", id, bt,
+							et, name));
+
+					if (tempon == 1) {
+						on++;
+					} else {
+						off++;
+					}
 				}
 
-				sb.append(String.format(Constant.oneMachinesInfo, rs.getInt(FieldName.Id), rs.getString(FieldName.M_Name),
-						onlineStr, rs.getInt(FieldName.MI_TotalMem), rs.getInt(FieldName.MI_FreeMem),
-						rs.getInt(FieldName.MI_MaxMem), rs.getString(FieldName.M_OSName), rs.getInt(FieldName.MI_TotalPhyMem),
-						rs.getInt(FieldName.MI_FreePhyMem), rs.getInt(FieldName.MI_UsedPhyMem), rs.getInt(FieldName.MI_TotalThread),
-						rs.getInt(FieldName.MI_CPURatio), rs.getInt(FieldName.MI_TotalDisk), rs.getInt(FieldName.MI_UsedDisk),
-						rs.getInt(FieldName.MI_FreeDisk))).append(",");
+				// 最详细内容
+				sb.append(String.format("{cost_time:%s,callnum:%s},", rs.getString("cost_time"), rs.getString("callnum")));
 			}
+			
+			
+			// 当循环结束,再加一次尾,不再加逗号.
+			sb.append("]}");
+
+			dbh.close(rs);
+
+			// 加最外层.
+			sb.insert(0, String.format("{res:true,count:%d,online:%d,offline:%d,data:[", on + off, on, off)).append("]}");
+
+			write.print(sb.toString());
 		} catch (SQLException e) {
-			log.log(Level.SEVERE, "执行获得数据发生异常", e);
+			log.log(Level.SEVERE, "获得数据发生异常:", e);
 		}
-		// 删除多余的一个逗号,并加入尾部
-		sb.delete(sb.length() - 1, sb.length());
-		sb.append("]}");
-		// 加入头
-		sb.insert(0, String.format("{res:true,count:%d,online:%d,offline:%d,data:[", on + off, on, off));
-
-		write.println(sb.toString());
-		write.flush();
-
-		dbh.close(rs);
 	}
 }

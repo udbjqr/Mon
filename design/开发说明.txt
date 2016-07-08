@@ -1,0 +1,38 @@
+1.需要增加采集项方式:
+	增加CollectionType类型.每一个不同的采集方式,不同的类型
+	在com.tk.monitor.collection目录下,继承并实现Collection接口.
+	修改com.tk.monitor.agent.Agent类.在构造函数中增加相对应类型的实例化代码.
+	修改com.tk.monitor.Server.getCollection()方法,增加相对应类型的实例化代码. 
+		save()方法.增加对应类型的保存持久化内容.
+	
+		如server端与angent端传送消息足够,则不修改此部分内容.否则,修改getAgentCollectionsJson(String)方法,增加对应的消息字段.
+	
+	增加数据库表,与save()方法对应.
+	
+	在com.tk.monitor.servlet目录,增加对应的servlet,以将数据导出.
+	在接口文档增加对应此采集的接口信息.
+	在web.xml文件内增加对应的servlet调用.
+
+2.结构说明:
+	com.tk.logger目录:
+		此包为日志对象.对于日志可在properties目录下的log.properties进行相关配置.
+	com.tk.monitor目录:
+		主要Server类.调用此类即可开启服务端的服务.此类应该放入独立线程当中启动.
+			对于Server类,需要在properties目录下的log.properties进行相关配置.
+			Server对象为单例,在第一次访问时会自动启动一个线程并执行.
+		此包保存一个通用常量文件,一个数据库列名常量文件.
+	com.tk.sql目录:
+		此包对应数据库操作对象.主要调用对象为DataBaseHandle.此包封闭了数据库连接池/数据库操作,以及某一个数据库相关细节.
+			注:使用注意,在调用select(sql)返回ResultSet对象后,必须使用close(ResultSet)方法关闭.否则有可能造成连接池超出.
+	com.tk.monitor.users目录:
+		此包为监控对象的权限以及登录控制.用户对象在此.
+	com.tk.monitor.servlet目录:
+		此包为监控的数据展示层代码.此包只读数据库/或向server请求相关数据.并不涉及业务逻辑和直接数据库写.
+	com.tk.monitor.agent目录:
+		此包为代理对象代码.布置在异地服务器上.需要在配置文件当中指明服务端所在IP地址,当采集的对象需要数据连接时,需要配置数据库连接.
+		主要类:Agent类.调用此类来单独一个线程执行,此类会向服务端申请数据,并实例化采集对象并开启采集动作.
+	com.tk.monitor.collection目录:
+		此包为实际的采集对象.负责实际的与硬件相关处理.每一个类型对应一个单独的处理对象.
+
+		
+		

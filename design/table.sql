@@ -15,6 +15,7 @@ CREATE TABLE machines
    colldimension       int(10) not null default 0 comment '采集的粒度,针对不同的采集对象不同意义',
    collconfinfo  varchar(5000) not null default "" comment '每个采集特殊的采集信息.',
    ispause        int(2)  NOT NULL  DEFAULT 1  COMMENT '是否暂停采集,1:正常,0:暂停',
+   isonline		 int(2) not null default 1 comment '显示此设备是否在线,1:在线,0:离线',
    PRIMARY KEY(id)
 );
 
@@ -65,10 +66,10 @@ CREATE TABLE interfaceinfo
 );
 
 insert into agent(id,ipadd,remark,flag) values(0,'localhost','this mac',0);
+insert into agent(id,ipadd,remark,flag) values(1,'192.168.1.108','this mac',0);
 
 
-select * from agent where ipadd = '192.168.1.128';
-insert into agent(id,ipadd,remark,flag) values(1,'192.168.1.128','this mac',0);
+select * from agent where ipadd = '192.168.1.108';
 select * from machines;
 update machines set agentid = 1;
 insert into machines (id, mname, osname, remark, flag, agentid, collinterval, ispause) 

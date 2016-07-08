@@ -72,7 +72,9 @@ public interface Collection extends Runnable{
 	public long getLastRunTime();
 	
 	/**
-	 * 执行一次采集动作.
+	 * 执行一次采集动作,并刷最后执行时间.
+	 * 
+	 * <p>实现类在这里应该刷一次执行时间.即:调用此方法后,再调用getLastRunTime,会得到最新的时间.
 	 */
 	public void collection();
 	
@@ -93,5 +95,17 @@ public interface Collection extends Runnable{
 	 * @return
 	 */
 	public int getCollid();
+	
+	/**
+	 * 得到设备是否在线
+	 * @return
+	 */
+	public boolean isOnline();
+
+	/**
+	 * 设置设备在线标志
+	 * @param online
+	 */
+	public void setOnline(boolean online);
 	
 }

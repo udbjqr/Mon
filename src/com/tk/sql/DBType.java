@@ -6,5 +6,5 @@ package com.tk.sql;
  *
  */
 public enum DBType {
-	mssqlserver,Oracle,Pgsql,Mysql
+	MSSQL,ORACLE,PGSQL,MYSQL
 }

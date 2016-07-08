@@ -22,7 +22,7 @@ import com.tk.monitor.FieldName;
 public class MachinesInfo extends HttpServlet{
 	private static final long serialVersionUID = -8502155827609533702L;
 	private static final Logger log = Logging.getLogger("Servlet");
-	private static final DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.Mysql);
+	private static final DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.MYSQL);
 	private int id = -1;
 
 	@Override
@@ -75,7 +75,7 @@ public class MachinesInfo extends HttpServlet{
 	}
 	
 	private void getMachinesInfoOne(PrintWriter write) {
-		String sql = "select mi.id,mi.cpuratio,mi.freedisk,mi.useddisk,mi.freemem,mi.freephymem,mi.maxmem,ifnull(mi.online,0) as online,"
+		String sql = "select mi.id,mi.cpuratio,mi.freedisk,mi.useddisk,mi.freemem,mi.freephymem,mi.maxmem,m.isonline as online,"
 				+ "mi.gettime,mi.totaldisk,mi.totalmem,mi.totalphymem,mi.totalthread,mi.usedphymem,m.mname,m.osname "
 				+ "from machines m left join (select * from machinesinfo mi where not exists "
 				+ "(select 1 from machinesinfo  where mi.id = id and mi.gettime = gettime and mi.gettime <gettime) and mi.id = "
@@ -108,7 +108,7 @@ public class MachinesInfo extends HttpServlet{
 	}
 
 	private void getMachinesInfoALL(PrintWriter write) {
-		String sql = "select mi.id,mi.cpuratio,mi.freedisk,mi.useddisk,mi.freemem,mi.freephymem,mi.maxmem,ifnull(mi.online,0) as online,"
+		String sql = "select mi.id,mi.cpuratio,mi.freedisk,mi.useddisk,mi.freemem,mi.freephymem,mi.maxmem,m.isonline as online,"
 				+ "mi.gettime,mi.totaldisk,mi.totalmem,mi.totalphymem,mi.totalthread,mi.usedphymem,m.mname,m.osname "
 				+ "from machines m left join (select * from machinesinfo mi where not exists "
 				+ "(select 1 from machinesinfo  where mi.id = id and mi.gettime <gettime)) mi on m.id = mi.id and m.flag = 0;";
@@ -141,7 +141,7 @@ public class MachinesInfo extends HttpServlet{
 			log.log(Level.SEVERE, "执行获得数据发生异常", e);
 		}
 		// 删除多余的一个逗号,并加入尾部
-		sb.delete(sb.length() - 1, sb.length());
+		sb.deleteCharAt(sb.length() - 1);
 		sb.append("]}");
 		// 加入头
 		sb.insert(0, String.format("{res:true,count:%d,online:%d,offline:%d,data:[", on + off, on, off));
