@@ -136,7 +136,7 @@
 
 	成功返回:
 		{res:true,count:xx,online:xx,offline:xx,data:[
-			{res:true,id:xx,name:"XXX",mintime:"XXX",maxtime:"XXX",interval:xx,details:[{cost_time:xx,callnum:xx}...]}
+			{id:xx,name:"XXX",mintime:"XXX",maxtime:"XXX",interval:xx,details:[{cost_time:xx,callnum:xx}...]}
 			...
 			]}
 	count:接口调用总数

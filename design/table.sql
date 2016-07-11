@@ -12,7 +12,7 @@ CREATE TABLE machines
    remark         varchar(2000) COMMENT '备注',
    flag           int(10) DEFAULT 0 COMMENT '标志,0:机器,1:接口调用',
    collinterval   int(10) NOT NULL DEFAULT 60 COMMENT '采集的间隔时间,以秒为单位',
-   colldimension       int(10) not null default 0 comment '采集的粒度,针对不同的采集对象不同意义',
+   colldimension       int(10) not null default 1 comment '采集的粒度,针对不同的采集对象不同意义',
    collconfinfo  varchar(5000) not null default "" comment '每个采集特殊的采集信息.',
    ispause        int(2)  NOT NULL  DEFAULT 1  COMMENT '是否暂停采集,1:正常,0:暂停',
    isonline		 int(2) not null default 1 comment '显示此设备是否在线,1:在线,0:离线',
@@ -86,7 +86,7 @@ select * from t_uigw_sysinvokelog t;
 --外部系统的对应表.
 DROP TABLE IF EXISTS `t_uigw_sysinvokelog`;
 CREATE TABLE `t_uigw_sysinvokelog` (
-  `id` varchar(32) NOT NULL COMMENT '记录ID',
+  `id` int(10) NOT NULL auto_increment  COMMENT '记录ID',
   `system_id` varchar(32) DEFAULT NULL COMMENT '系统ID',
   `interface_id` varchar(128) DEFAULT NULL COMMENT '接口ID',
   `cost_time` varchar(32) DEFAULT NULL COMMENT '调用时长，毫秒',

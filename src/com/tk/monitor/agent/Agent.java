@@ -62,17 +62,16 @@ public class Agent implements CollectionRecord, Runnable{
 		return serverAddr;
 	}
 
+	// public synchronized void add(Collection coll) {
+	// colls.add(coll);
+	// this.notify();
+	// }
 
-//	public synchronized void add(Collection coll) {
-//		colls.add(coll);
-//		this.notify();
-//	}
-
-//	public synchronized void remove(Collection coll) {
-//		coll.stop();
-//		colls.remove(coll);
-//		this.notify();
-//	}
+	// public synchronized void remove(Collection coll) {
+	// coll.stop();
+	// colls.remove(coll);
+	// this.notify();
+	// }
 
 	/**
 	 * 启动此agent线程.
@@ -94,7 +93,7 @@ public class Agent implements CollectionRecord, Runnable{
 	 * 关闭正在执行的线程,如未启动,调用无效果.
 	 */
 	public synchronized void stop() {
-		if(shutDown){
+		if (shutDown) {
 			log.warning("线程未启动,不需要关闭.");
 			return;
 		}
@@ -121,18 +120,18 @@ public class Agent implements CollectionRecord, Runnable{
 			}
 
 			while (!shutDown) {
-				//判断是否到达启动时间.每1秒启动检查一次,因此采集最小时间间隔就是1秒.
+				try {
+					wait(1000);
+				} catch (InterruptedException e) {
+					log.log(Level.SEVERE, "", e);
+				}
+
+				// 判断是否到达启动时间.每1秒启动检查一次,因此采集最小时间间隔就是1秒.
 				currentTime = System.currentTimeMillis();
 				for (Collection coll : colls) {
 					if (currentTime > (coll.getLastRunTime() + coll.getInterval())) {
 						coll.collection();
 					}
-				}
-
-				try {
-					wait(1000);
-				} catch (InterruptedException e) {
-					log.log(Level.SEVERE, "", e);
 				}
 			}
 
@@ -154,8 +153,8 @@ public class Agent implements CollectionRecord, Runnable{
 		Properties pro = new Properties();
 		if (is == null) {
 			try {
-				is = new FileInputStream(new File(
-						Agent.class.getClassLoader().getResource("").toURI().getPath() + "/properties/Agent.properties"));
+				is = new FileInputStream(
+						new File(Agent.class.getClassLoader().getResource("").toURI().getPath() + "/properties/Agent.properties"));
 				pro.load(is);
 			} catch (Exception e) {
 				log.log(Level.SEVERE, "初始化出现异常,请检查配置文件.", e);
@@ -180,7 +179,7 @@ public class Agent implements CollectionRecord, Runnable{
 			} catch (MalformedURLException e) {
 				log.log(Level.SEVERE, "服务器IP地址无法解析,请检查配置文件ServerIPAdd字段!", e);
 			}
-			//配置数据库
+			// 配置数据库
 			if (pro.getProperty("NeedDBSupport", "false").equals("true")) {
 				try {
 					DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.valueOf(pro.getProperty("DBType", "MYSQL")));
@@ -214,8 +213,9 @@ public class Agent implements CollectionRecord, Runnable{
 			case InterfaceCall:
 				colls.add(new InterfaceColl(this, j.getInt("id"), id, j.getInt("collid"), j.getInt("collinterval"),
 						j.getInt("collDimension"), j.getLong("lastCollTime"), j.getInt("lastColl"), j.getBoolean("ispaush")));
+				break;
 			default:
-				log.severe("错误的类型.");
+				log.severe("错误的类型.值:" + j.getInt("type"));
 				break;
 			}
 		}
@@ -223,17 +223,19 @@ public class Agent implements CollectionRecord, Runnable{
 
 	/**
 	 * 保存数据.
-	 * <p>agnet的保存将数据向远端服务器发送数据.并接收确认保存消息.
+	 * <p>
+	 * agnet的保存将数据向远端服务器发送数据.并接收确认保存消息.
 	 */
 	@Override
-	public void save(CollectionType collType, String collDataJson) {
+	public synchronized void save(CollectionType collType, String collDataJson) {
 		exchangData("type=" + collType.ordinal() + "&data=" + collDataJson);
 	}
 
-	
 	/**
 	 * 使用http协议将数据发送至远端.
-	 * @param data 要传送的数据
+	 * 
+	 * @param data
+	 *          要传送的数据
 	 * @return 收到远端响应的数据.
 	 */
 	private String exchangData(String data) {

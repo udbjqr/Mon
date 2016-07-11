@@ -39,7 +39,7 @@ public class Server implements CollectionRecord, Runnable{
 			+ "freephymem, usedphymem, totalthread, cpuratio, totaldisk, useddisk,freedisk) "
 			+ " values(%s,'%s',1,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);";
 	private final String interfaceInsertDBStr = "insert into interfaceinfo (collid, gettime, online, cost_time, callnum, lastcollid) "
-			+ " values(%s,%s,1,%s,%s,%s);";
+			+ " values(%d,'%s',1,%f,%d,%d);";
 
 	private List<Collection> colls = new LinkedList<Collection>();
 
@@ -100,6 +100,7 @@ public class Server implements CollectionRecord, Runnable{
 	 * 停止服务.
 	 */
 	public synchronized void stop() {
+		log.finest("接受关闭线程指令.");
 		shutDown = true;
 		this.notify();
 	}
@@ -127,7 +128,7 @@ public class Server implements CollectionRecord, Runnable{
 		for (Collection coll : colls) {
 			if (coll.getAgent() == agentId) {
 				sb.append("{type:" + coll.getType().ordinal() + ",id:" + coll.getId() + ",ispaush:"
-						+ (coll.isPause() ? "true" : "false") + ",collinterval:" + coll.getInterval() / 1000 + ",collid:"
+						+ (coll.isPause() ? "true" : "false") + ",collinterval:" + coll.getInterval() + ",collid:"
 						+ coll.getCollid() + ",lastCollTime:" + coll.getLastRunTime() + ",collDimension:" + coll.getCollDimension()
 						+ ",lastColl:" + coll.getLastColl() + "},");
 			}
@@ -167,8 +168,8 @@ public class Server implements CollectionRecord, Runnable{
 			dbh.execBatchSql(sqls);
 			break;
 		case InterfaceCall:
-			sqls[0] = String.format(interfaceInsertDBStr, js.getString("id"), js.getString("gettime"),
-					js.getString("cost_time"), js.getString("callnum"), js.getString("lastcollid"));
+			sqls[0] = String.format(interfaceInsertDBStr, js.get("id"), js.getString("gettime"),
+					js.get("cost_time"), js.get("callnum"), js.get("lastcollid"));
 			sqls[1] = "update machines set isonline = 1 where id = " + js.get("id") + " and isonline <> 1;";
 			dbh.execBatchSql(sqls);
 			break;
@@ -188,6 +189,7 @@ public class Server implements CollectionRecord, Runnable{
 			log.warning("Server对象正在执行中,不能再次开始.");
 			return;
 		}
+		
 		log.finer("Server对象初始化,并开始执行.");
 
 		synchronized (this) {
@@ -202,9 +204,9 @@ public class Server implements CollectionRecord, Runnable{
 		ResultSet rs = dbh.select("select * from machines;");
 		try {
 			while (rs.next()) {
-				colls.add(getCollection(rs.getInt(FieldName.M_Flag), rs.getInt(FieldName.Id), rs.getInt(FieldName.M_CollId),
+				colls.add(getCollection(rs.getInt(FieldName.M_Flag), rs.getInt(FieldName.Id),
 						rs.getInt(FieldName.M_CollInterval), rs.getInt(FieldName.M_CollDimension), rs.getInt(FieldName.M_IsPause),
-						rs.getInt(FieldName.M_Agent)));
+						rs.getInt(FieldName.M_Agent), rs.getInt(FieldName.M_CollId)));
 			}
 		} catch (SQLException e) {
 			log.log(Level.SEVERE, "", e);
@@ -216,6 +218,7 @@ public class Server implements CollectionRecord, Runnable{
 
 		//启动线程
 		Thread th = new Thread(this);
+		shutDown = false;
 		th.start();
 	}
 
@@ -223,9 +226,9 @@ public class Server implements CollectionRecord, Runnable{
 			int collid) {
 		switch (CollectionType.values()[type]) {
 		case Machine:
-			return new Machines(this, id, agent, ispause == 0, collInterval, collid);
+			return new Machines(this, id, agent, ispause == 0, collInterval * 1000, collid);
 		case InterfaceCall:
-			return new InterfaceColl(this, id, agent, collid, collInterval, collDimension, 0, 0, ispause == 0);
+			return new InterfaceColl(this, id, agent, collid, collInterval * 1000, collDimension, 0, 0, ispause == 0);
 		default:
 			break;
 		}
@@ -250,6 +253,13 @@ public class Server implements CollectionRecord, Runnable{
 
 		long currentTime = 0;
 		while (!shutDown) {
+			//线程信息1秒
+			try {
+				wait(1000);
+			} catch (InterruptedException e) {
+				log.log(Level.SEVERE, "", e);
+			}
+			
 			currentTime = System.currentTimeMillis();
 			//间隔时间到达,启动采集动作.
 			for (Collection coll : colls) {
@@ -263,12 +273,6 @@ public class Server implements CollectionRecord, Runnable{
 				}
 			}
 
-			//线程信息1秒
-			try {
-				wait(1000);
-			} catch (InterruptedException e) {
-				log.log(Level.SEVERE, "", e);
-			}
 		}
 
 		log.info("执行完成,关闭线程中...");
@@ -284,6 +288,7 @@ public class Server implements CollectionRecord, Runnable{
 
 	private void setOffline(Collection coll) {
 		if (coll.isOnline()) {
+			log.info("采集对象离线." + coll);
 			dbh.update("update machines set isonline = 0 where id = " + coll.getId() + " and isonline = 1;");
 			coll.setOnline(false);
 		}

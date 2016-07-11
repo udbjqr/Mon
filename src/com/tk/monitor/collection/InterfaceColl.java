@@ -28,6 +28,7 @@ public class InterfaceColl implements Collection{
 	private final int collobjId;
 	private final CollectionType type = CollectionType.InterfaceCall;
 	private final CollectionRecord collRecord;
+	// 这个值就是以秒为单位
 	private int collinterval;
 	private final int collDimension;
 	private String collconfinfo;
@@ -53,15 +54,15 @@ public class InterfaceColl implements Collection{
 		this.collobjId = collobjId;
 		this.collRecord = collRecord;
 		this.agent = agent;
-		this.collinterval = collinterval * 1000 * 60;
+		this.collinterval = collinterval;
 		this.pause = pause;
 		this.collDimension = collDimension;
 		this.lastCollid = lastCollid;
 
 		// 调用者是服务端,从数据库取相应数据.
 		if (agent == 0) {
-			ResultSet rs = dbh.select(
-					"select ifnull(max(gettime),'01/01/1900 01:01:01') as lastruntime, ifnull(max(lastcollid),0) as lastcollid"
+			ResultSet rs = dbh
+					.select("select ifnull(gettime,'01/01/1900 01:01:01') as lastruntime, ifnull(lastcollid,0) as lastcollid"
 							+ " from interfaceinfo where id = " + collobjId + "; ");
 			try {
 				while (rs.next()) {
@@ -77,8 +78,8 @@ public class InterfaceColl implements Collection{
 			this.lastCollid = lastCollid;
 		}
 
-		this.jsonStr = "{id:" + id + ",gettime:\"%1$tY-%1$tm-%1$td %1$tT.%1$tL\","
-				+ "cost_time:%2$d,callnum:%3$d,lastcollid:%4$d}";
+		this.jsonStr = "{id:" + id + ",gettime:\"%1$s\","
+				+ "cost_time:%2$f,callnum:%3$d,lastcollid:%4$d}";
 
 		String dimensionColName = "interface_id";
 
@@ -94,19 +95,27 @@ public class InterfaceColl implements Collection{
 		}
 
 		testStr = "select ifnull(min(id),-1) as id  from t_uigw_sysinvokelog  t where  id > %1$d" + " and "
-				+ dimensionColName + " = %2$d and t.log_date > (log_date,interval %3$d minute));";
+				+ dimensionColName + " = %2$d and t.log_date > "
+				+ "date_add((select min(log_date) from t_uigw_sysinvokelog where id > %1$d), interval %3$d  second);";
 		// 读取数据的sql
-		readStr = "select ifnull(max(collobjId),0) as lastid,max(log_date) as gettime,ifnull(avg(cost_time),0) as cost_time,count(*) as callnum "
-				+ "from t_uigw_sysinvokelog where id > %1$d and id <= %2$d  and " + dimensionColName + " = %3$d ;";
+		readStr = "select ifnull(max(id),0) as lastid,max(log_date) as gettime,ifnull(avg(cost_time),0) "
+				+ "as cost_time,count(*) as callnum from t_uigw_sysinvokelog where id > %1$d and id < %2$d  and "
+				+ dimensionColName + " = %3$d ;";
 	}
 
 	@Override
 	public synchronized void run() {
 		log.info("采集开始启动,id:" + collobjId);
 		while (!shutDown) {
+			// 停止相应间隔时间
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				log.log(Level.SEVERE, "线程暂停失败:", e);
+			}
 			log.finest("开始采集数据.");
 
-			String str = String.format(testStr, lastCollid, collobjId, collinterval);
+			String str = String.format(testStr, lastCollid, collobjId, collinterval / 1000);
 			for (int minid = dbh.selectWithInt(str); minid > 0; minid = dbh.selectWithInt(str)) {
 				lastRunTime = System.currentTimeMillis();
 
@@ -121,7 +130,6 @@ public class InterfaceColl implements Collection{
 						str = String.format(jsonStr, rs.getString("gettime"), rs.getDouble("cost_time"), rs.getInt("callnum"),
 								rs.getLong("lastid"));
 					}
-
 					dbh.close(rs);
 
 					collRecord.save(type, str);
@@ -129,12 +137,8 @@ public class InterfaceColl implements Collection{
 				} catch (SQLException e1) {
 					log.log(Level.SEVERE, "读取数据出错.", e1);
 				}
-			}
-			// 停止相应间隔时间
-			try {
-				wait();
-			} catch (InterruptedException e) {
-				log.log(Level.SEVERE, "线程暂停失败:", e);
+				
+				str = String.format(testStr, lastCollid, collobjId, collinterval / 1000);
 			}
 		}
 
@@ -229,10 +233,14 @@ public class InterfaceColl implements Collection{
 	public boolean isOnline() {
 		return online;
 	}
-	
+
 	@Override
 	public void setOnline(boolean online) {
 		this.online = online;
 	}
 
+	@Override
+	public String toString() {
+		return "id:" + id + ".agentid:" + agent + ".collobjId:" + collobjId;
+	}
 }

@@ -74,6 +74,13 @@ public class Machines implements Collection{
 	public synchronized void run() {
 		log.info("采集开始启动,id:" + machineId);
 		while (!shutDown) {
+			// 停止相应间隔时间
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				log.log(Level.SEVERE, "线程暂停失败:", e);
+			}
+			
 			log.finest("开始采集数据.");
 			lastRunTime = System.currentTimeMillis();
 
@@ -114,13 +121,6 @@ public class Machines implements Collection{
 			log.finer("采集到数据:" + str);
 
 			collRecord.save(type, str);
-
-			// 停止相应间隔时间
-			try {
-				wait();
-			} catch (InterruptedException e) {
-				log.log(Level.SEVERE, "线程暂停失败:", e);
-			}
 		}
 		
 		log.finer("采集线程结束,id:" + machineId);
@@ -291,7 +291,7 @@ public class Machines implements Collection{
 		this.id = id;
 		this.agent = agent;
 		this.pause = pause;
-		this.collInterval = collInterval * 1000;
+		this.collInterval = collInterval;
 		this.machineId = id;
 		this.jsonStr = "{id:" + machineId + ",gettime:\"%1$tY-%1$tm-%1$td %1$tT.%1$tL\","
 				+ "totalmemory:%2$d,freememory:%3$d,maxmemory:%4$d,osname:%5$s,"
@@ -348,7 +348,7 @@ public class Machines implements Collection{
 	
 	@Override
 	public String getLastColl() {
-		return "";
+		return "0";
 	}
 
 	@Override
@@ -369,5 +369,10 @@ public class Machines implements Collection{
 	@Override
 	public void setOnline(boolean online) {
 		this.online = online;
+	}
+	
+	@Override
+	public String toString() {
+			return "id:" + id + ".agentid:" + agent;
 	}
 }
