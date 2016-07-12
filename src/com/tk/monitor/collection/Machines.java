@@ -375,4 +375,9 @@ public class Machines implements Collection{
 	public String toString() {
 			return "id:" + id + ".agentid:" + agent;
 	}
+
+	@Override
+	public String getLastGetTime() {
+		return "1900-01-01";
+	}
 }

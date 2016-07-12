@@ -91,9 +91,9 @@ public class InterfaceCallInfo extends HttpServlet{
 	}
 
 	private void getInfoOne(PrintWriter write, String beginTime, String endTime, int inl) {
-		String sql = "select a.*,b.mname from (select id,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) "
-				+ "FROM interfaceinfo where id = %1$d and gettime between '%2$s' and '%3$s' group by id,gettime div (%4$d * 60)) a"
-				+ " inner join machines b on a.id = b.id";
+		String sql = "select a.*,b.mname from (select collid,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) "
+				+ "FROM interfaceinfo where collid = %1$d and gettime between '%2$s' and '%3$s' group by id,UNIX_TIMESTAMP(gettime) div (%4$d * 60)) a"
+				+ " inner join machines b on a.collid = b.id order by a.collid,mintime asc";
 
 		ResultSet rs = dbh.select(String.format(sql, id, beginTime, endTime, inl));
 
@@ -125,51 +125,52 @@ public class InterfaceCallInfo extends HttpServlet{
 	}
 
 	private void getInfoALL(PrintWriter write, String beginTime, String endTime, int inl) {
-		String sql = "select a.*,b.mname,b.online "
-				+ " from (select id,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) "
-				+ "FROM interfaceinfo where gettime between '%1$s' and '%2$s' group by id,gettime div (%3$d * 60)) a"
-				+ " inner join machines b on a.id = b.id order by a.id";
+		String sql = "select a.*,b.mname,b.isonline "
+				+ " from (select collid,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) as callnum "
+				+ " FROM interfaceinfo where gettime between '%1$s' and '%2$s' group by collid,UNIX_TIMESTAMP(gettime) div (%3$d * 60)) a"
+				+ " inner join machines b on a.collid = b.id order by a.collid,mintime asc";
 
 		ResultSet rs = dbh.select(String.format(sql, beginTime, endTime, inl));
 
 		try {
 			StringBuilder sb = new StringBuilder();
-			int on = 0, off = 0, pid = -1, tempon = 0;
+			int on = 0, off = 0, pid = -1, tempon = 0, ind = 0;
 			String bt = "", et = "", name = "";
 			while (rs.next()) {
-				if (pid != rs.getInt("id")) {	// 判断是否新的一个数据.
-					if (sb.charAt(sb.length() - 1) == ',') {// 判断最后一个是否为逗号,是的话,删除.因为有可能没有任何数据.
-						sb.deleteCharAt(sb.length() - 1);
-					}
-					
-					if (sb.length() != 0) {// 判断缓冲为空.不为空加尾部.
-						sb.append("]},");
-					}
-					// 第一次进来先取数据.
-					pid = rs.getInt("id");
-					bt = rs.getString("mintime");
-					et = rs.getString("maxtime");
-					name = rs.getString("mname");
-					tempon = rs.getInt("online");
-
-					// 增加信息体内容.
-					sb.insert(0, String.format("{id:%d,name:\"%s\",mintime:\"%s\",maxtime:\"%s\",interval:%d,details:[", id, bt,
-							et, name));
-
-					if (tempon == 1) {
-						on++;
-					} else {
-						off++;
-					}
-				}
-
 				// 最详细内容
 				sb.append(String.format("{cost_time:%s,callnum:%s},", rs.getString("cost_time"), rs.getString("callnum")));
+				et = rs.getString("maxtime");
+
+				if (tempon == 1) {
+					on++;
+				} else {
+					off++;
+				}
+
+				if (pid != rs.getInt("collid")) {
+					bt = rs.getString("mintime");
+					name = rs.getString("mname");
+					tempon = rs.getInt("isonline");
+
+					if (pid != -1) {
+						if (sb.length() > 0 && sb.charAt(sb.length() - 1) == ',') {// 判断最后一个是否为逗号,是的话,删除.因为有可能没有任何数据.
+							sb.deleteCharAt(sb.length() - 1);
+						}
+						// 增加信息体内容.
+						sb.insert(ind, String.format("{id:%d,name:\"%s\",mintime:\"%s\",maxtime:\"%s\",interval:%d,details:[", pid,
+								name, bt, et, inl)).append("]},");
+						
+						ind = sb.length() - 1;
+					}
+				}
+				pid = rs.getInt("collid");
 			}
-			
+
+			sb.deleteCharAt(sb.length() - 1);
 			
 			// 当循环结束,再加一次尾,不再加逗号.
-			sb.append("]}");
+			sb.insert(ind, String.format("{id:%d,name:\"%s\",mintime:\"%s\",maxtime:\"%s\",interval:%d,details:[", pid,
+					name, bt, et, inl)).append("]}");
 
 			dbh.close(rs);
 

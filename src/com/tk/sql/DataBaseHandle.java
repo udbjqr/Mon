@@ -70,5 +70,7 @@ public abstract class DataBaseHandle{
 	 * @param sqls
 	 */
 	public abstract void execBatchSql(String[] sqls);
+
+	public abstract String selectWithString(String str);
 }
 

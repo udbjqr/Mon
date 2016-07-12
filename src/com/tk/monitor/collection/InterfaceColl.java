@@ -2,7 +2,6 @@ package com.tk.monitor.collection;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.tk.logger.Logging;
@@ -35,9 +34,9 @@ public class InterfaceColl implements Collection{
 	private boolean pause = false;
 	private final int agent;
 	private long lastRunTime;
+	private String lastGetTime;
 	private long lastCollid;
 
-	private final Date dat = new Date();
 	private Thread th;
 	private boolean shutDown = true;
 	private boolean online = true;
@@ -49,7 +48,7 @@ public class InterfaceColl implements Collection{
 	private final String readStr;
 
 	public InterfaceColl(CollectionRecord collRecord, int id, int agent, int collobjId, int collinterval,
-			int collDimension, long lastRunTime, int lastCollid, boolean pause) {
+			int collDimension, String lastGetTime, int lastCollid, boolean pause) {
 		this.id = id;
 		this.collobjId = collobjId;
 		this.collRecord = collRecord;
@@ -59,27 +58,30 @@ public class InterfaceColl implements Collection{
 		this.collDimension = collDimension;
 		this.lastCollid = lastCollid;
 
-		// 调用者是服务端,从数据库取相应数据.
-		if (agent == 0) {
-			ResultSet rs = dbh
-					.select("select ifnull(gettime,'01/01/1900 01:01:01') as lastruntime, ifnull(lastcollid,0) as lastcollid"
-							+ " from interfaceinfo where id = " + collobjId + "; ");
+		// 当没有传入此时间数据时被调用,第一次服务端初始化将不传入此值。
+		if (lastGetTime == null || lastGetTime.equals("")) {
+			ResultSet rs = dbh.select("select ifnull(gettime,'1900-01-01') as lastruntime, ifnull(lastcollid,0) as lastcollid"
+					+ " from interfaceinfo where id = " + id + "; ");
 			try {
-				while (rs.next()) {
-					this.lastRunTime = rs.getDate("lastruntime").getTime();
+				if (rs.next()) {
+					this.lastGetTime = rs.getString("lastruntime");
 					this.lastCollid = rs.getInt("lastcollid");
+				}
+				else{
+//				if(lastGetTime == null || lastGetTime.equals("")){
+					this.lastGetTime = "1900-01-01";
+					this.lastCollid = 0;
 				}
 			} catch (SQLException e) {
 				log.log(Level.SEVERE, "读取数据出错.", e);
 			}
 
 		} else {
-			this.lastRunTime = lastRunTime;
+			this.lastGetTime = lastGetTime;
 			this.lastCollid = lastCollid;
 		}
 
-		this.jsonStr = "{id:" + id + ",gettime:\"%1$s\","
-				+ "cost_time:%2$f,callnum:%3$d,lastcollid:%4$d}";
+		this.jsonStr = "{id:" + id + ",gettime:\"%1$s\"," + "cost_time:%2$f,callnum:%3$d,lastcollid:%4$d}";
 
 		String dimensionColName = "interface_id";
 
@@ -94,13 +96,13 @@ public class InterfaceColl implements Collection{
 			break;
 		}
 
-		testStr = "select ifnull(min(id),-1) as id  from t_uigw_sysinvokelog  t where  id > %1$d" + " and "
-				+ dimensionColName + " = %2$d and t.log_date > "
-				+ "date_add((select min(log_date) from t_uigw_sysinvokelog where id > %1$d), interval %3$d  second);";
+		testStr = "select ifnull(min(log_date),'') as logdate from t_uigw_sysinvokelog  t where " + dimensionColName
+				+ " = %d and t.log_date > date_add((select min(log_date) from t_uigw_sysinvokelog where log_date > '%s')"
+				+ ", interval %d  second);";
 		// 读取数据的sql
 		readStr = "select ifnull(max(id),0) as lastid,max(log_date) as gettime,ifnull(avg(cost_time),0) "
-				+ "as cost_time,count(*) as callnum from t_uigw_sysinvokelog where id > %1$d and id < %2$d  and "
-				+ dimensionColName + " = %3$d ;";
+				+ "as cost_time,count(*) as callnum from t_uigw_sysinvokelog where log_date > '%s' and log_date < '%s'  and "
+				+ dimensionColName + " = %d ;";
 	}
 
 	@Override
@@ -115,30 +117,32 @@ public class InterfaceColl implements Collection{
 			}
 			log.finest("开始采集数据.");
 
-			String str = String.format(testStr, lastCollid, collobjId, collinterval / 1000);
-			for (int minid = dbh.selectWithInt(str); minid > 0; minid = dbh.selectWithInt(str)) {
-				lastRunTime = System.currentTimeMillis();
+			// 读取数据的sql
+			String oneLastDate = dbh.selectWithString(String.format(testStr, collobjId, lastGetTime, collinterval / 1000));
+			String str;
+			try {
+				while (!oneLastDate.equals("")) { // 如果没有可采集的数据，返回""
+					lastRunTime = System.currentTimeMillis();
 
-				try {
-					str = String.format(readStr, lastCollid, minid, collobjId);
+					str = String.format(readStr, lastGetTime, oneLastDate, collobjId);
 					ResultSet rs = dbh.select(str);
 
 					while (rs.next()) {
-						lastCollid = rs.getLong("lastid");
+						//lastCollid = rs.getLong("lastid");
+						lastGetTime = rs.getString("gettime");
 
-						dat.setTime(lastRunTime);
-						str = String.format(jsonStr, rs.getString("gettime"), rs.getDouble("cost_time"), rs.getInt("callnum"),
-								rs.getLong("lastid"));
+						str = String.format(jsonStr, lastGetTime, rs.getDouble("cost_time"), rs.getInt("callnum"), lastCollid);
 					}
 					dbh.close(rs);
 
 					collRecord.save(type, str);
 					log.finer("采集到数据:" + str);
-				} catch (SQLException e1) {
-					log.log(Level.SEVERE, "读取数据出错.", e1);
+
+					oneLastDate = dbh.selectWithString(String.format(testStr, collobjId, lastGetTime, collinterval / 1000));
 				}
-				
-				str = String.format(testStr, lastCollid, collobjId, collinterval / 1000);
+				log.finest("没有可采集的数据，暂停。");
+			} catch (SQLException e1) {
+				log.log(Level.SEVERE, "读取数据出错.", e1);
 			}
 		}
 
@@ -242,5 +246,10 @@ public class InterfaceColl implements Collection{
 	@Override
 	public String toString() {
 		return "id:" + id + ".agentid:" + agent + ".collobjId:" + collobjId;
+	}
+
+	@Override
+	public String getLastGetTime() {
+		return lastGetTime;
 	}
 }

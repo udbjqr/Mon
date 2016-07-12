@@ -158,4 +158,21 @@ public final class MysqlHandle extends DataBaseHandle{
 			}
 		}
 	}
+
+	@Override
+	public String selectWithString(String sql) {
+		ResultSet set = select(sql);
+		String res = "";
+
+		try {
+			while (set.next()) {
+				res = set.getString(1);
+			}
+		} catch (SQLException e) {
+			log.log(Level.SEVERE, "获得ResultSet数据异常:", e);
+		}
+
+		close(set);
+		return res;
+	}
 }

@@ -16,6 +16,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.tk.logger.Logging;
@@ -203,8 +204,9 @@ public class Agent implements CollectionRecord, Runnable{
 
 		// "{res:true,agent:xx,data:[{type:xx,ispaush:xx,collinterval:xx,collid:xx,
 		// lastCollTime:"XX",collDimension:xx,lastColl:"XX"}...]}"
-		for (Object obj : jo.getJSONArray("data")) {
-			JSONObject j = (JSONObject) obj;
+		JSONArray arr = jo.getJSONArray("data");
+		for (int i = 0; i < arr.length() ; i++) {
+			JSONObject j =  arr.getJSONObject(i);
 			switch (CollectionType.values()[j.getInt("type")]) {
 			case Machine:
 				colls.add(new Machines(this, j.getInt("id"), id, j.getBoolean("ispaush"), j.getInt("collinterval"),
@@ -212,7 +214,8 @@ public class Agent implements CollectionRecord, Runnable{
 				break;
 			case InterfaceCall:
 				colls.add(new InterfaceColl(this, j.getInt("id"), id, j.getInt("collid"), j.getInt("collinterval"),
-						j.getInt("collDimension"), j.getLong("lastCollTime"), j.getInt("lastColl"), j.getBoolean("ispaush")));
+						j.getInt("collDimension"), j.getString("lastCollTime"), j.getInt("lastColl"), j.getBoolean("ispaush")));
+
 				break;
 			default:
 				log.severe("错误的类型.值:" + j.getInt("type"));

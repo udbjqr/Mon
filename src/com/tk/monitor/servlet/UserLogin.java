@@ -10,12 +10,17 @@ import javax.servlet.http.HttpSession;
 
 import com.tk.logger.Logging;
 import com.tk.monitor.Constant;
+import com.tk.monitor.Server;
 import com.tk.monitor.users.User;
 
 public class UserLogin extends HttpServlet{
 	private static final long serialVersionUID = 1365502106021685020L;
 	private static final Logger log = Logging.getLogger("Servlet");
 
+	static{
+		Server.getIns();
+	}
+	
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		req.setCharacterEncoding("UTF-8");

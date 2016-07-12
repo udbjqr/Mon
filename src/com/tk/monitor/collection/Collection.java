@@ -109,4 +109,10 @@ public interface Collection extends Runnable{
 	 */
 	public void setOnline(boolean online);
 	
+	/**
+	 * 得到已经被采集数据的最大时间,用以在按时间判断是否采集
+	 * @return
+	 */
+	public String getLastGetTime();
+	
 }

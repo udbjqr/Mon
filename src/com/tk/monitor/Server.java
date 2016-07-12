@@ -129,8 +129,8 @@ public class Server implements CollectionRecord, Runnable{
 			if (coll.getAgent() == agentId) {
 				sb.append("{type:" + coll.getType().ordinal() + ",id:" + coll.getId() + ",ispaush:"
 						+ (coll.isPause() ? "true" : "false") + ",collinterval:" + coll.getInterval() + ",collid:"
-						+ coll.getCollid() + ",lastCollTime:" + coll.getLastRunTime() + ",collDimension:" + coll.getCollDimension()
-						+ ",lastColl:" + coll.getLastColl() + "},");
+						+ coll.getCollid() + ",lastCollTime:\"" + coll.getLastGetTime() + "\",collDimension:" + coll.getCollDimension()
+						+ ",lastColl:" + coll.getLastColl()  + "},");
 			}
 		}
 		if (sb.length() > 0) {
@@ -168,8 +168,8 @@ public class Server implements CollectionRecord, Runnable{
 			dbh.execBatchSql(sqls);
 			break;
 		case InterfaceCall:
-			sqls[0] = String.format(interfaceInsertDBStr, js.get("id"), js.getString("gettime"),
-					js.get("cost_time"), js.get("callnum"), js.get("lastcollid"));
+			sqls[0] = String.format(interfaceInsertDBStr, js.get("id"), js.getString("gettime"), js.get("cost_time"),
+					js.get("callnum"), js.get("lastcollid"));
 			sqls[1] = "update machines set isonline = 1 where id = " + js.get("id") + " and isonline <> 1;";
 			dbh.execBatchSql(sqls);
 			break;
@@ -189,7 +189,7 @@ public class Server implements CollectionRecord, Runnable{
 			log.warning("Server对象正在执行中,不能再次开始.");
 			return;
 		}
-		
+
 		log.finer("Server对象初始化,并开始执行.");
 
 		synchronized (this) {
@@ -199,7 +199,7 @@ public class Server implements CollectionRecord, Runnable{
 			}
 		}
 
-		//重新读取数据库的采集对象
+		// 重新读取数据库的采集对象
 		colls.clear();
 		ResultSet rs = dbh.select("select * from machines;");
 		try {
@@ -213,10 +213,10 @@ public class Server implements CollectionRecord, Runnable{
 		}
 
 		dbh.close(rs);
-		
+
 		log.finest("程序启动.");
 
-		//启动线程
+		// 启动线程
 		Thread th = new Thread(this);
 		shutDown = false;
 		th.start();
@@ -228,7 +228,7 @@ public class Server implements CollectionRecord, Runnable{
 		case Machine:
 			return new Machines(this, id, agent, ispause == 0, collInterval * 1000, collid);
 		case InterfaceCall:
-			return new InterfaceColl(this, id, agent, collid, collInterval * 1000, collDimension, 0, 0, ispause == 0);
+			return new InterfaceColl(this, id, agent, collid, collInterval * 1000, collDimension, "", 0, ispause == 0);
 		default:
 			break;
 		}
@@ -253,15 +253,15 @@ public class Server implements CollectionRecord, Runnable{
 
 		long currentTime = 0;
 		while (!shutDown) {
-			//线程信息1秒
+			// 线程信息1秒
 			try {
 				wait(1000);
 			} catch (InterruptedException e) {
 				log.log(Level.SEVERE, "", e);
 			}
-			
+
 			currentTime = System.currentTimeMillis();
-			//间隔时间到达,启动采集动作.
+			// 间隔时间到达,启动采集动作.
 			for (Collection coll : colls) {
 				if (currentTime > (coll.getLastRunTime() + coll.getInterval()) && !coll.isShutDown()) {
 					coll.collection();
@@ -282,7 +282,7 @@ public class Server implements CollectionRecord, Runnable{
 			}
 		}
 
-		//线程结束,通知其他等待的线程.
+		// 线程结束,通知其他等待的线程.
 		notifyAll();
 	}
 
