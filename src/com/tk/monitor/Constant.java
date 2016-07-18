@@ -24,12 +24,12 @@ public final class Constant{
 	/**
 	 * 登录成功使用的字符串
 	 */
-	public final static String respLoginOk = "{res:true}";
+	public final static String respLoginOk = "{\"res\":true}";
 
 	/**
 	 * 返回失败时使用的通用字符串
 	 */
-	public final static String respGeneralFaile = "{res:false,reason:\"%s\",errorid:%d}";
+	public final static String respGeneralFaile = "{\"res\":false,\"reason\":\"%s\",\"errorid\":%d}";
 
 	/**
 	 * 返回错误:用户名或密码错误.
@@ -39,7 +39,7 @@ public final class Constant{
 	/**
 	 * 返回错误:用户还未登录
 	 */
-	public final static String respNotLogin = "{res:false,reason:\"not login!please log in first.\"}";
+	public final static String respNotLogin = "{\"res\":false,\"reason\":\"not login!please log in first.\"}";
 
 	/**
 	 * 请求:指明请求的方式:所有/单个/概要
@@ -58,6 +58,16 @@ public final class Constant{
 	 */
 	public final static String reqParaInterval = "interval";
 	/**
+	 * 请求:指明请求的页数
+	 */
+	public final static String reqParaPageCount = "pagecount";
+
+	/**
+	 * 请求:指明请求每页行数
+	 */
+	public final static String reqParaPageNum = "pagenum";
+
+	/**
 	 * 请求方式:所有
 	 */
 	public final static String GetTypeWithAll = "all";
@@ -66,9 +76,17 @@ public final class Constant{
 	 */
 	public final static String GetTypeWithOne = "one";
 	/**
+	 * 请求方式:系统调用情况
+	 */
+	public final static String GetTypeWithSystemCall = "systemcall";
+	/**
 	 * 请求方式:概要
 	 */
 	public final static String GetTypeWithProbably = "probably";
+	/**
+	 * 请求方式:单个统计信息
+	 */
+	public final static String GetTypeWithOneCount = "onecount";
 
 	/**
 	 * 请求机器或服务的ID
@@ -78,10 +96,10 @@ public final class Constant{
 	/**
 	 * 返回:单个机器硬件详细信息字串
 	 */
-	public final static String oneMachinesInfo = "{res:true,id:%d,name:\"%s\",online:\"%s\","
-			+ "totalMemory:%d,freeMemory:%d,maxMemory:%d,osName:\"%s\","
-			+ "totalPhysicalMemory:%d,freePhysicalMemory:%d,usedPhysicalMemory:%d,totalThread:%d,"
-			+ "cpuRatio:%d,totalDisk:%d,usedDisk:%d,freeDisk:%d}";
+	public final static String oneMachinesInfo = "{\"res\":true,\"id\":%d,\"name\":\"%s\",\"online\":\"%s\","
+			+ "\"totalMemory\":%d,\"freeMemory\":%d,\"maxMemory\":%d,\"osName\":\"%s\","
+			+ "\"totalPhysicalMemory\":%d,\"freePhysicalMemory\":%d,\"usedPhysicalMemory\":%d,\"totalThread\":%d,"
+			+ "\"cpuRatio\":%d,\"totalDisk\":%d,\"usedDisk\":%d,\"freeDisk\":%d}";
 
 	
 	/**

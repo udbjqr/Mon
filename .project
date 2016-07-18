@@ -3,6 +3,7 @@
 	<name>Mon</name>
 	<comment></comment>
 	<projects>
+		<project>Tools</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

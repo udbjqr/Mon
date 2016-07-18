@@ -25,6 +25,8 @@ public class InterfaceCallInfo extends HttpServlet{
 	private static final Logger log = Logging.getLogger("Servlet");
 	private static final DataBaseHandle dbh = DataBaseHandle.getDBHandle(DBType.MYSQL);
 	private int id;
+	private int pagecount = 20;
+	private int pagenum = 0;
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -61,6 +63,13 @@ public class InterfaceCallInfo extends HttpServlet{
 			sf.parse(beginTime);
 			sf.parse(endTime);
 			inl = Integer.parseInt(interval);
+			if (req.getParameter(Constant.reqParaPageCount) != null) {
+				pagecount = Integer.parseInt(req.getParameter(Constant.reqParaPageCount));
+			}
+
+			if (req.getParameter(Constant.reqParaPageNum) != null) {
+				pagenum = Integer.parseInt(req.getParameter(Constant.reqParaPageNum)) - 1;
+			}
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "传入参数格式不正确" + e);
 			resp.getWriter().print(String.format(Constant.respGeneralFaile, "传入参数格式不正确,请检查传入参数.", 8));
@@ -83,6 +92,9 @@ public class InterfaceCallInfo extends HttpServlet{
 			}
 			getInfoOne(write, beginTime, endTime, inl);
 			break;
+		case Constant.GetTypeWithSystemCall:
+			getInfoSystemCall(write, beginTime, endTime);
+			break;
 		default:
 			write.println(String.format(Constant.respGeneralFaile, "未知的请求方式!", 1));
 			break;
@@ -90,24 +102,22 @@ public class InterfaceCallInfo extends HttpServlet{
 
 	}
 
-	private void getInfoOne(PrintWriter write, String beginTime, String endTime, int inl) {
-		String sql = "select a.*,b.mname from (select collid,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) "
-				+ "FROM interfaceinfo where collid = %1$d and gettime between '%2$s' and '%3$s' group by id,UNIX_TIMESTAMP(gettime) div (%4$d * 60)) a"
-				+ " inner join machines b on a.collid = b.id order by a.collid,mintime asc";
+	private void getInfoSystemCall(PrintWriter write, String beginTime, String endTime) {
+		String sql = "select  m.id,min(m.mname) as mname,sum(i.callnum) as callnum,avg(i.cost_time) as cost_time "
+				+ " from machines m inner join interfaceinfo i on m.id = i.collid where m. colldimension = 2 "
+				+ "and i.gettime between '%s' and '%s' group by m.id order by m.id;";
 
-		ResultSet rs = dbh.select(String.format(sql, id, beginTime, endTime, inl));
-
+		ResultSet rs = dbh.select(String.format(sql, beginTime, endTime));
 		StringBuilder sb = new StringBuilder();
-		String bt = null;
-		String et = null;
-		String na = null;
 		try {
-			while (rs.next()) {
-				bt = rs.getString("mintime");
-				et = rs.getString("maxtime");
-				na = rs.getString("mname");
 
-				sb.append("{cost_time:" + rs.getString("cost_time") + ",callnum:" + rs.getString("callnum") + "},");
+			// {res:true,mintime:"XXX",maxtime:"XXX",details:[{id:xx,name:"XXX",cost_time:xx,callnum:xx}...]}
+			while (rs.next()) {
+				sb.append("{\"cost_time\":").append(rs.getDouble("cost_time")).append(",");
+				sb.append("\"id\":").append(rs.getString("id")).append(",");
+				sb.append("\"name\":\"").append(rs.getString("mname")).append("\",");
+				sb.append("\"callnum\":").append(rs.getString("callnum")).append(",");
+				sb.append("},");
 			}
 			dbh.close(rs);
 
@@ -115,8 +125,43 @@ public class InterfaceCallInfo extends HttpServlet{
 				sb.deleteCharAt(sb.length() - 1);
 			}
 
-			sb.insert(0, String.format("{res:true,id:%1$d,name:\"%s\",mintime:\"%s\",maxtime:\"%s\",interval:%d,details:[",
-					id, na, bt, et, inl)).append("]}");
+			sb.insert(0,
+					String.format("{\"res\":true,\"mintime\":\"%s\",\"maxtime\":\"%s\",\"details\":[", beginTime, endTime))
+					.append("]}");
+
+			write.print(sb.toString());
+		} catch (SQLException e) {
+			log.log(Level.SEVERE, "获得监控调用数据发生异常:", e);
+		}
+	}
+
+	private void getInfoOne(PrintWriter write, String beginTime, String endTime, int inl) {
+		String sql = "select a.*,b.mname from (select collid,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) "
+				+ "FROM interfaceinfo where collid = %1$d and gettime between '%2$s' and '%3$s' group by id,UNIX_TIMESTAMP(gettime) div (%4$d * 60)) a"
+				+ " inner join machines b on a.collid = b.id order by a.collid,mintime asc ";
+
+		ResultSet rs = dbh.select(String.format(sql, id, beginTime, endTime, inl));
+
+		StringBuilder sb = new StringBuilder();
+		String na = null;
+		try {
+			while (rs.next()) {
+				na = rs.getString("mname");
+
+				sb.append("{\"cost_time\":").append(rs.getDouble("cost_time")).append(",");
+				sb.append("\"callnum\":").append(rs.getString("callnum")).append(",");
+				sb.append("\"mintime\":\"").append(rs.getString("mintime")).append("\",");
+				sb.append("\"maxtime\":\"").append(rs.getString("maxtime")).append("\"");
+				sb.append("},");
+			}
+			dbh.close(rs);
+
+			if (sb.length() > 0) {
+				sb.deleteCharAt(sb.length() - 1);
+			}
+
+			sb.insert(0, String.format("{\"res\":true,\"id\":%d,\"name\":\"%s\",\"interval\":%d,\"details\":[", id, na, inl))
+					.append("]}");
 
 			write.print(sb.toString());
 		} catch (SQLException e) {
@@ -128,9 +173,9 @@ public class InterfaceCallInfo extends HttpServlet{
 		String sql = "select a.*,b.mname,b.isonline "
 				+ " from (select collid,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) as callnum "
 				+ " FROM interfaceinfo where gettime between '%1$s' and '%2$s' group by collid,UNIX_TIMESTAMP(gettime) div (%3$d * 60)) a"
-				+ " inner join machines b on a.collid = b.id order by a.collid,mintime asc";
+				+ " inner join machines b on a.collid = b.id order by a.collid,mintime asc limit %4$d offset %5$d";
 
-		ResultSet rs = dbh.select(String.format(sql, beginTime, endTime, inl));
+		ResultSet rs = dbh.select(String.format(sql, beginTime, endTime, inl, pagecount, pagecount * pagenum));
 
 		try {
 			StringBuilder sb = new StringBuilder();
@@ -138,7 +183,8 @@ public class InterfaceCallInfo extends HttpServlet{
 			String bt = "", et = "", name = "";
 			while (rs.next()) {
 				// 最详细内容
-				sb.append(String.format("{cost_time:%s,callnum:%s},", rs.getString("cost_time"), rs.getString("callnum")));
+				sb.append(
+						String.format("{\"cost_time\":%s,\"callnum\":%s},", rs.getString("cost_time"), rs.getString("callnum")));
 				et = rs.getString("maxtime");
 
 				if (tempon == 1) {
@@ -157,9 +203,12 @@ public class InterfaceCallInfo extends HttpServlet{
 							sb.deleteCharAt(sb.length() - 1);
 						}
 						// 增加信息体内容.
-						sb.insert(ind, String.format("{id:%d,name:\"%s\",mintime:\"%s\",maxtime:\"%s\",interval:%d,details:[", pid,
-								name, bt, et, inl)).append("]},");
-						
+						sb.insert(ind,
+								String.format(
+										"{\"id\":%d,\"name\":\"%s\",\"mintime\":\"%s\",\"maxtime\":\"%s\",\"interval\":%d,\"details\":[",
+										pid, name, bt, et, inl))
+								.append("]},");
+
 						ind = sb.length() - 1;
 					}
 				}
@@ -167,15 +216,20 @@ public class InterfaceCallInfo extends HttpServlet{
 			}
 
 			sb.deleteCharAt(sb.length() - 1);
-			
+
 			// 当循环结束,再加一次尾,不再加逗号.
-			sb.insert(ind, String.format("{id:%d,name:\"%s\",mintime:\"%s\",maxtime:\"%s\",interval:%d,details:[", pid,
-					name, bt, et, inl)).append("]}");
+			sb.insert(ind,
+					String.format(
+							"{\"id\":%d,\"name\":\"%s\",\"mintime\":\"%s\",\"maxtime\":\"%s\",\"interval\":%d,\"details\":[", pid,
+							name, bt, et, inl))
+					.append("]}");
 
 			dbh.close(rs);
 
 			// 加最外层.
-			sb.insert(0, String.format("{res:true,count:%d,online:%d,offline:%d,data:[", on + off, on, off)).append("]}");
+			sb.insert(0,
+					String.format("{\"res\":true,\"count\":%d,\"online\":%d,\"offline\":%d,\"data\":[", on + off, on, off))
+					.append("]}");
 
 			write.print(sb.toString());
 		} catch (SQLException e) {

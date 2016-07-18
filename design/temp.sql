@@ -1,73 +1,64 @@
-select * from machines m;
-
+select * from machines;
 select * from agent a;
-
-delete from agent where id = 1;
-
-INSERT INTO agent  (id,ipadd,flag,remark)
-     VALUES (2,'192.168.10.112',0,'abc');
+update agent set ipadd = '192.168.10.127';
+	 
+INSERT INTO machines  (id,collid,agentid,mname,osname,remark,flag,collinterval,colldimension,collconfinfo,ispause,isonline)
+     VALUES (5,205,2,'systemid_2','win','send system ',1,60,2,'',1,1);
+	 
+INSERT INTO machines  (id,collid,agentid,mname,osname,remark,flag,collinterval,colldimension,collconfinfo,ispause,isonline)
+     VALUES (6,206,2,'systemid_3','win','three system ',1,60,2,'',1,1);
+	
+INSERT INTO machines  (id,collid,agentid,mname,osname,remark,flag,collinterval,colldimension,collconfinfo,ispause,isonline)
+     VALUES (7,207,2,'systemid_4','win','four system ',1,60,2,'',1,1);
+	 
+INSERT INTO machines  (id,collid,agentid,mname,osname,remark,flag,collinterval,colldimension,collconfinfo,ispause,isonline)
+     VALUES (8,208,2,'systemid_5','win','four system ',1,60,2,'',1,1);
 	 
 	 
-INSERT INTO machines (id, collid, agentid, mname, osname, remark, flag, collinterval, colldimension, collconfinfo, ispause, isonline)  
-	VALUES (3,10,2,'interface','windows','abc',1,1,0,'',1,1);
+	 
+	 
+SELECT * FROM t_uigw_sysinvokelog t;
+
+INSERT INTO t_uigw_sysinvokelog(system_id,interface_id,cost_time,log_date) 
+	values(205,22222,3,now());
 	
-INSERT INTO machines (id, collid, agentid, mname, osname, remark, flag, collinterval, colldimension, collconfinfo, ispause, isonline)  
-	VALUES (2,6,2,'machine','windows','mac',0,30,0,'',1,1);
+INSERT INTO t_uigw_sysinvokelog(system_id,interface_id,cost_time,log_date) 
+	values(206,2,3,now());
+
+INSERT INTO t_uigw_sysinvokelog(system_id,interface_id,cost_time,log_date) 
+	values(207,42,3,now());
+
+INSERT INTO t_uigw_sysinvokelog(system_id,interface_id,cost_time,log_date) 
+	values(208,262,3,now());
 	
+	
+	
+SELECT * FROM machines m;
+select max(log_date) as gettime,ifnull(avg(cost_time),0) as cost_time,count(*) as callnum 
+from t_uigw_sysinvokelog where log_date > '1900-01-01' and log_date < '2016-07-18 10:04:18'  and system_id = 207 ;
+
+select * from t_uigw_sysinvokelog where system_id = 207 ;
+
+
+select ifnull(min(log_date),'') as logdate from t_uigw_sysinvokelog  t where system_id = 207 and t.log_date > date_add(
+(select min(log_date) from t_uigw_sysinvokelog where log_date > '1900-01-01' and system_id = 207 ), interval 60  second);
+
+
+
+insert into interfaceinfo (collid, gettime, online, cost_time, callnum, lastcollid)  values(7,'null',1,0.000000,0,0);
+update machines set isonline = 1 where id = 7 and isonline <> 1;
+
+select max(log_date) as gettime,ifnull(avg(cost_time),0) as cost_time,count(*) as callnum from t_uigw_sysinvokelog where log_date > '1900-01-01' and log_date < '2016-07-11 18:16:10'  and interface_id = 10 ;
+
+
 
 SELECT * FROM interfaceinfo i;
-delete from interfaceinfo;
-SELECT * FROM machinesinfo m;
 
-INSERT INTO t_uigw_sysinvokelog  (cost_time,interface_id,log_date,remote_addr,system_id)
-     VALUES (floor(rand()*10),10,now(),'abc',8);
+select  m.id,min(m.mname) as mname,sum(i.callnum) as callnum,avg(i.cost_time) as cost_time
+ from machines m inner join interfaceinfo i on m.id = i.collid
+  where m. colldimension = 2 and i.gettime between "" and ""  
+group by m.id order by m.id;
 
-
-select ifnull(min(log_date),'') as logdate from t_uigw_sysinvokelog t where  interface_id = 10  and 
-	t.log_date > date_add((select min(log_date) from t_uigw_sysinvokelog where log_date > 0), interval 60  second);
-
-
-select ifnull(max(id),0) as lastid,max(log_date) as gettime,ifnull(avg(cost_time),0) as cost_time,count(*) as callnum
- from t_uigw_sysinvokelog where log_date > 0 and log_date < '2016-07-11 18:16:10'  and interface_id = 10 ;
-
-update machines set isonline = 1 where id = 3 and isonline <> 1;
-select unix_timestamp(now());
-UPDATE machines SET collinterval = 60 where id = 3;
-
-
-select date_add((select min(log_date) from t_uigw_sysinvokelog where log_date > '2016-07-12 11:43:28'), interval 60  second);
-
-select ifnull(gettime,'1900-01-01') as lastruntime, ifnull(lastcollid,0) as lastcollid from interfaceinfo where id = 3; 
-
-select * from t_uigw_sysinvokelog;
-
-select ifnull(min(log_date),'') as logdate from t_uigw_sysinvokelog  t 
-where interface_id = 10 and t.log_date > date_add((select min(log_date) 
-from t_uigw_sysinvokelog where log_date > '2016-07-12 11:43:28.0'), interval 60  second);
-
-select ifnull(max(id),0) as lastid,max(log_date) as gettime,ifnull(avg(cost_time),0) as cost_time,count(*) as callnum 
-from t_uigw_sysinvokelog where log_date > '2016-07-12 11:22:03.0' and log_date < '2016-07-12 13:26:28'  and interface_id = 10 ;
-
-
-select a.*,b.mname,b.isonline  from (select id,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) 
-FROM interfaceinfo where gettime between '2016-01-01 01:01:01' and '2016-08-01 01:01:01' group by id,gettime div (60 * 60)) a 
-inner join machines b on a.id = b.id order by a.id;
-
-
-
-select a.*,b.mname,b.isonline  from (select collid,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) 
-FROM interfaceinfo where gettime between '2016-01-01 01:01:01' and '2016-08-01 01:01:01' group by collid,UNIX_TIMESTAMP(gettime) div (60 * 60 )) a 
-inner join machines b on a.collid = b.id order by a.collid;
-
-
-select * from interfaceinfo;
-
-
-select *,gettime div (60  * 60)
-FROM interfaceinfo  where gettime between '2016-01-01 01:01:01' and '2016-08-01 01:01:01';
-
-
-select *,log_date div(1),UNIX_TIMESTAMP(log_date) div 60 from t_uigw_sysinvokelog;
-
-select a.*,b.mname,b.isonline  from (select collid,min(gettime) as mintime,max(gettime) as maxtime,avg(cost_time) as cost_time,sum(callnum) FROM interfaceinfo where gettime between '2016-01-01 01:01:01' and '2016-08-01 01:01:01' group by collid,UNIX_TIMESTAMP(gettime) div (60 * 60)) a inner join machines b on a.collid = b.id order by a.collid,mintime asc
+select * from t_uigw_sysinvokelog t
+order by id limit 14 offset 14;
 

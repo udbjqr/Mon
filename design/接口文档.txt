@@ -4,6 +4,8 @@
 	所有请求参数用http://sxx?para=的形式上传参数
 	注:单位
 		内存/硬盘以MB为单位
+	日期格式："yyyy-MM-dd HH:mm:ss"24小时格式.
+		
 		
 一、显示部分接口
 0.访问地址
@@ -26,11 +28,14 @@
 	{res:false,reason:"not login!please log in first."}
 	
 2.给出所有机器数量以及机器列表:
-	请求地址:./MachinesInfo
+	请求地址:./MachinesInfo?gettype=all&pagecount=14&pagenum=xx
 	请求信息:
 	?gettype=all
 		 指明请求所有内容
-		
+	pagecount=xx
+		指明每页显示多少内容
+	pagenum=xx	
+		指明显示第几页
 	成功返回:
 		{res:true,count:xx,online:xx,offline:xx,data:[
 			{res:true,id:xx,name:"XXX",online:true/false,
@@ -93,6 +98,7 @@
 		?gettype=one&id=xx
 		gettype:指明请求的是单个信息
 		id:指明需要获得信息的机器的ID
+
 	
 	成功返回:
 		{res:true,id:xx,name:"XXX",online:true/false,
@@ -119,20 +125,58 @@
 	失败返回:
 		{res:false,reason:"XXX",errorid:xx}
 
+4.1 给出单个机器统计详细数据
+	请求地址:./MachinesInfo
+	请求信息:
+		?gettype=onecount&id=xx&begintime="XXX"&endtime="XXX"&interval=xx&pagecount=14&pagenum=xx
+		gettype=onecount 指明请求的是单个机器的统计信息
+		id:指明需要获得信息的机器的ID
+		begintiem:请求数据的启始时间
+		endtime:请求数据的结束时间
+		interval:请求数据的时间间隔,值为int型，单位为分钟
+		pagecount=xx
+		指明每页显示多少内容
+		pagenum=xx	
+		指明显示第几页
+		
+	成功返回:
+		{res:true,id:xx,name:"XXX",interval:xx,details:[
+			{mintime:"XXX",maxtime:"XXX",totalmemory:xx,freememory:xx,maxmemory:xx,
+			totalphysicalmemory:xx,freephysicalmemory:xx,usedphysicalmemory:xx,totalthread:xx,
+			cpuratio:xx,totaldisk:xx,usedDisk:xx,freedisk:xx}
+			...
+			]}
+			
+		id:指明此台机器在本系统当中的ID
+		name:指明此机器在本系统当中给出的名字
+		data:详细数据如下
+			mintime:获得数据最小时间(数据的时间,而不是申请的时间)
+			maxtime:获得数据最大时间(数据的时间,而不是申请的时间)
+			totalMemory:可使用内存
+			freeMemory:剩余内存
+			maxMemory:最大可使用内存
+			totalPhysicalMemory:总的物理内存
+			freePhysicalMemory:剩余的物理内存
+			usedPhysicalMemory:已使用的物理内存
+			totalThread:线程总数
+			cpuRatio:cpu使用率,整数,指明百分比
+			totalDisk:硬盘总容量
+			usedDisk:已用硬盘容量
+			freeDisk:可用硬盘容量
+	
+	失败返回:
+		{res:false,reason:"XXX",errorid:xx}
+
 5.给出总的接口调用数量以及所有接口调用列表:
 	请求地址:./ServerInfo
 	请求信息:
-	?gettype=all&begintime="XXX"&endtime="XXX"&interval=xx
+	?gettype=all&begintime="XXX"&endtime="XXX"&interval=xx&pagecount=14&pagenum=xx
 		gettype:all 请求所有数据
 		begintiem:请求数据的启始时间
 		endtime:请求数据的结束时间
-		interval:请求数据的时间间隔,取值:
-			1:代表1分钟
-			2:代表15分钟
-			3:代表30分钟
-			4:代表60分钟
-			5:代表120分钟
-			6:代表240分钟
+		interval:请求数据的时间间隔,值为int型，单位为分钟
+		pagecount=xx：指明每页显示多少内容
+		pagenum=xx：指明显示第几页
 
 	成功返回:
 		{res:true,count:xx,online:xx,offline:xx,data:[
@@ -182,7 +226,27 @@
 	失败返回:
 		{res:false,reason:"XXX",errorid:xx}
 	
+8.给出系统调用情况的信息
+	请求地址:./ServerInfo
+	请求信息:
+		?gettype=systemcall&begintime="XXX"&endtime="XXX"&interval:xx
+		gettype=systemcall 指明请求为系统调用情况
+		begintime=XXX 开始时间
+		endtime=XXX 结束时间
+		interval:xx 此间隔时间保留，参数必传，而且为整型
+	
+	成功返回:
+		{res:true,mintime:"XXX",maxtime:"XXX",details:[{id:xx,name:"XXX",cost_time:xx,callnum:xx}...]}
 
+	mintime:获得数据最小时间(数据的时间,而不是申请的时间)
+	maxtime:获得数据最大时间(数据的时间,而不是申请的时间)
+	details:根据时间间隔获得的数据
+		id:接口在监控系统当中的id
+		name:接口的名称
+		cost_time: 调用的平均花费时间值
+		callnum: 这一段时间内总调用次数
+	失败返回:
+		{res:false,reason:"XXX",errorid:xx}
 		
 		
 二、采集部分接口

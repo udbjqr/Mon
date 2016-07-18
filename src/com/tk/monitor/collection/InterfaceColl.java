@@ -61,17 +61,18 @@ public class InterfaceColl implements Collection{
 		// 当没有传入此时间数据时被调用,第一次服务端初始化将不传入此值。
 		if (lastGetTime == null || lastGetTime.equals("")) {
 			ResultSet rs = dbh.select("select ifnull(gettime,'1900-01-01') as lastruntime, ifnull(lastcollid,0) as lastcollid"
-					+ " from interfaceinfo where id = " + id + "; ");
+					+ " from interfaceinfo where collid = " + id + "; ");
 			try {
 				if (rs.next()) {
 					this.lastGetTime = rs.getString("lastruntime");
 					this.lastCollid = rs.getInt("lastcollid");
-				}
-				else{
-//				if(lastGetTime == null || lastGetTime.equals("")){
+				} else {
+					// if(lastGetTime == null || lastGetTime.equals("")){
 					this.lastGetTime = "1900-01-01";
 					this.lastCollid = 0;
 				}
+
+				dbh.close(rs);
 			} catch (SQLException e) {
 				log.log(Level.SEVERE, "读取数据出错.", e);
 			}
@@ -97,10 +98,10 @@ public class InterfaceColl implements Collection{
 		}
 
 		testStr = "select ifnull(min(log_date),'') as logdate from t_uigw_sysinvokelog  t where " + dimensionColName
-				+ " = %d and t.log_date > date_add((select min(log_date) from t_uigw_sysinvokelog where log_date > '%s')"
-				+ ", interval %d  second);";
+				+ " = %1$d and t.log_date > date_add((select min(log_date) from t_uigw_sysinvokelog where log_date > '%2$s' and "
+				+ dimensionColName + " = %1$d), interval %3$d  second);";
 		// 读取数据的sql
-		readStr = "select ifnull(max(id),0) as lastid,max(log_date) as gettime,ifnull(avg(cost_time),0) "
+		readStr = "select max(log_date) as gettime,ifnull(avg(cost_time),0) "
 				+ "as cost_time,count(*) as callnum from t_uigw_sysinvokelog where log_date > '%s' and log_date < '%s'  and "
 				+ dimensionColName + " = %d ;";
 	}
@@ -128,7 +129,6 @@ public class InterfaceColl implements Collection{
 					ResultSet rs = dbh.select(str);
 
 					while (rs.next()) {
-						//lastCollid = rs.getLong("lastid");
 						lastGetTime = rs.getString("gettime");
 
 						str = String.format(jsonStr, lastGetTime, rs.getDouble("cost_time"), rs.getInt("callnum"), lastCollid);

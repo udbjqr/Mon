@@ -49,7 +49,7 @@ public class Server implements CollectionRecord, Runnable{
 		if (is == null) {
 			try {
 				is = new FileInputStream(
-						new File(Agent.class.getClassLoader().getResource("").toURI().getPath() + "/properties/Agent.properties"));
+						new File(Agent.class.getClassLoader().getResource("").toURI().getPath() + "/properties/server.properties"));
 				pro.load(is);
 			} catch (Exception e) {
 				log.log(Level.SEVERE, "初始化出现异常,请检查配置文件.", e);
